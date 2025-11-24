@@ -3,7 +3,8 @@ import fitdecode
 import xmltodict
 
 from fastapi import UploadFile
-from backend.models.track import Track, TrackSegment
+from backend.models.track import Track, TrackSegment, TrackPoint
+
 
 # Main dispatcher
 async def load_track(file: UploadFile) -> Track:
@@ -31,37 +32,54 @@ def load_gpx(content: bytes) -> Track:
 
     for trk in gpx.tracks:
         for seg in trk.segments:
-            seg_points = []
+            seg_points: list[TrackPoint] = []
 
             for p in seg.points:
-                seg_points.append({
-                    "lat": p.latitude,
-                    "lon": p.longitude,
-                    "ele": p.elevation,
-                    "time": p.time.isoformat() if p.time else None,
-                    "hr": p.extensions and _extract_gpx_extension(p.extensions, "hr"),
-                    "cad": p.extensions and _extract_gpx_extension(p.extensions, "cad"),
-                    "power": p.extensions and _extract_gpx_extension(p.extensions, "power"),
-                })
+                t = p.time
+                hr = _extract_gpx_extension(p.extensions, "hr")
+                cad = _extract_gpx_extension(p.extensions, "cad")
+                power = _extract_gpx_extension(p.extensions, "power")
+
+                seg_points.append(
+                    TrackPoint(
+                        lat=p.latitude,
+                        lon=p.longitude,
+                        ele=p.elevation,
+                        time=t,
+                        hr=hr,
+                        cadence=cad,
+                        power=power
+                    )
+                )
 
             segments.append(TrackSegment(points=seg_points))
 
-    return Track(segments=segments, metadata={"format": "gpx"})
+    return Track(
+        segments=segments,
+        metadata={
+            "format": "gpx",
+            "name": gpx.name,
+            "description": gpx.description,
+            "start_time": gpx.time
+        })
 
-def _extract_gpx_extension(ext, name: str):
+def _extract_gpx_extension(ext, key: str):
     """Extracts extensions from GPX (cadence, heart rate, power)."""
-    try:
-        for child in ext:
-            if child.tag.endswith(name):
-                return child.text
-    except:
-        pass
+    if not ext:
+        return None
+    for item in ext:
+        if item.tag.lower().endswith(key):
+            try:
+                return int(item.text)
+            except (ValueError, TypeError):
+                return None
+
     return None
 
 
 # FIT (fitdecode)
 def load_fit(content: bytes) -> Track:
-    seg_points = []
+    seg_points: list[TrackPoint] = []
 
     with fitdecode.FitReader(content) as fit:
         for frame in fit:
@@ -79,17 +97,25 @@ def load_fit(content: bytes) -> Track:
                 lat = lat * 180 / 2 ** 31
                 lon = lon * 180 / 2 ** 31
 
-            seg_points.append({
-                "lat": lat,
-                "lon": lon,
-                "ele": data.get("altitude"),
-                "time": data.get("timestamp").isoformat() if data.get("timestamp") else None,
-                "power": data.get("power"),
-                "cad": data.get("cadence"),
-                "hr": data.get("heart_rate"),
-            })
+            seg_points.append(
+                TrackPoint(
+                    lat=lat,
+                    lon=lon,
+                    ele=data.get("altitude"),
+                    time=data.get("timestamp") if data.get("timestamp") else None,
+                    power=data.get("power"),
+                    cadence=data.get("cadence"),
+                    hr=data.get("heart_rate")
+                )
+            )
 
-    return Track(segments=[TrackSegment(points=seg_points)], metadata={"format": "fit"})
+    return Track(
+        segments=[TrackSegment(points=seg_points)],
+        metadata={
+            "format": "fit",
+            "sport":
+
+        })
 
 
 # TCX (xmltodict)
@@ -121,7 +147,7 @@ def load_tcx(content: bytes) -> Track:
         if isinstance(trackpoints, dict):
             trackpoints = [trackpoints]
 
-        seg_points = []
+        seg_points: list[TrackPoint] = []
 
         for tp in trackpoints:
 
