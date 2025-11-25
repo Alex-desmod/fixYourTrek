@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Literal, TypedDict, Optional
+from typing import Literal, TypedDict
 
 
 @dataclass
@@ -19,18 +19,14 @@ class TrackSegment:
 
 class TrackMetadata(TypedDict, total=False):
     format: Literal["gpx", "fit", "tcx"]
-    name: Optional[str] = None
-    description: Optional[str] = None
-    sport: Optional[str] = None
-    start_time: Optional[datetime] = None
-    duration: Optional[float] = None #seconds
-    distance: Optional[float] = None #meters
-    avg_hr: Optional[int] = None
-    max_hr: Optional[int] = None
-    avg_power: Optional[int] = None
-    max_power: Optional[int] = None
-    manufacturer: Optional[str] = None
-    product: Optional[str] = None
+    name: str | None
+    description: str | None
+    sport: str | None
+    start_time: datetime | None
+    duration: float | None #seconds
+    distance: float | None #meters
+    manufacturer: str | None
+    product: str | None
 
 
 @dataclass()
