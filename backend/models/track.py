@@ -13,9 +13,25 @@ class TrackPoint:
     hr: int | None = None
     power: int | None = None
 
+    def to_dict(self):
+        return {
+            "lat": self.lat,
+            "lon": self.lon,
+            "ele": self.ele,
+            "time": self.time.isoformat() if self.time else None,
+            "hr": self.hr,
+            "cadence": self.cadence,
+            "power": self.power,
+        }
+
 @dataclass
 class TrackSegment:
     points: list[TrackPoint]
+
+    def to_dict(self):
+        return {
+            "points": [p.to_dict() for p in self.points]
+        }
 
 class TrackMetadata(TypedDict, total=False):
     format: Literal["gpx", "fit", "tcx"]
@@ -28,10 +44,15 @@ class TrackMetadata(TypedDict, total=False):
     manufacturer: str | None
     product: str | None
 
-
 @dataclass()
 class Track:
     segments: list[TrackSegment]
     metadata: TrackMetadata = field(default_factory=dict)
+
+    def to_dict(self):
+        return {
+            "segments": [s.to_dict() for s in self.segments],
+            "metadata": dict(self.metadata)
+        }
 
 

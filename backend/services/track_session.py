@@ -1,4 +1,5 @@
 import copy
+import uuid
 
 from typing import List
 from backend.models.track import Track, TrackSegment, TrackPoint
@@ -113,7 +114,7 @@ class TrackSession:
             copy.deepcopy(other.segments)
         )
 
-    # Утилиты
+    # Utilites
     def get_track(self) -> Track:
         """Returns the current state of the track."""
         return self.current_track
@@ -122,3 +123,22 @@ class TrackSession:
         """Resets to the original track."""
         self.current_track = copy.deepcopy(self.original_track)
         self._history = []
+
+
+class TrackSessionManager:
+    """
+    Manages the track sessions. We may have several users, every track uploading is a session.
+    """
+    def __init__(self):
+        self.sessions = {}
+
+    def create_session(self, track):
+        session_id = str(uuid.uuid4())
+        self.sessions[session_id] = TrackSession(track)
+        return session_id
+
+    def get(self,session_id):
+        return self.sessions.get(session_id)
+
+    def delete(self, session_id):
+        return self.sessions.pop(session_id, None)
