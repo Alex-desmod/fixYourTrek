@@ -1,6 +1,6 @@
 from fastapi import UploadFile, APIRouter, File, HTTPException
 
-from backend.schemas.track_requests import RerouteRequest
+from backend.schemas.track_requests import RerouteRequest, TrimRequest
 from backend.services.track_loader import load_track
 from backend.services.track_session import TrackSessionManager
 
@@ -35,4 +35,12 @@ async def undo(session_id: str):
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
     session.undo()
+    return {"track": session.current_track.to_dict()}
+
+@router.post("/trim")
+async def trim_track(req: TrimRequest):
+    session = session_manager.get(req.session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    session.trim(start_idx=req.start_idx, end_idx=req.end_idx)
     return {"track": session.current_track.to_dict()}
