@@ -27,5 +27,6 @@ async def load_track(file: UploadFile) -> Track:
 
 async def export_track(track: Track, format: Literal["gpx", "fit", "tcx"]) -> dict:
     if format == "gpx":
-        return to_gpx(track)
+        return {"data": to_gpx(track), "media_type": "application/gpx+xml"}
+
 
