@@ -1,7 +1,9 @@
+from typing import Literal
+
 from fastapi import UploadFile
 
 from backend.models.track import Track
-from backend.services.gpx import load_gpx
+from backend.services.gpx import load_gpx, to_gpx
 from backend.services.fit import load_fit
 from backend.services.tcx import load_tcx
 
@@ -23,5 +25,7 @@ async def load_track(file: UploadFile) -> Track:
     else:
         raise ValueError("Unsupported format: " + filename)
 
-async def export_track(track: Track, fmt: str) -> dict:
-    pass
+async def export_track(track: Track, format: Literal["gpx", "fit", "tcx"]) -> dict:
+    if format == "gpx":
+        return to_gpx(track)
+

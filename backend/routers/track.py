@@ -1,3 +1,5 @@
+from typing import Literal
+
 from fastapi import UploadFile, APIRouter, File, HTTPException
 from fastapi.responses import Response
 
@@ -56,10 +58,11 @@ async def merge_track(session_id: str, file: UploadFile = File(...)):
     return {"track": session.current_track.to_dict()}
 
 @router.get("/export")
-async def export_track(session_id: str, fmt: str, name: str):
+async def export_track(session_id: str, format: Literal["gpx", "fit", "tcx"], name: str):
     """
     export the current session track
-    :param fmt: 'gpx', 'tcx', 'fit' name: name of the file
+    :param format: 'gpx', 'tcx', 'fit'
+    :param name: name of the file
     :return:
     """
     session = session_manager.get(session_id)
@@ -67,9 +70,9 @@ async def export_track(session_id: str, fmt: str, name: str):
         raise HTTPException(status_code=404, detail="Session not found")
     track = session.current_track
 
-    content = export_track(track, fmt)
+    content = export_track(track, format)
     data = content["data"]
-    filename = f"{name}.{fmt}"
+    filename = f"{name}.{format}"
     media_type = content["media_type"]
 
     return Response(
