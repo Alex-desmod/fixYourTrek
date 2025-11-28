@@ -22,3 +22,6 @@ async def load_track(file: UploadFile) -> Track:
         return load_tcx(content)
     else:
         raise ValueError("Unsupported format: " + filename)
+
+async def export_track(track: Track, fmt: str) -> dict:
+    pass

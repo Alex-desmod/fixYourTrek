@@ -1,7 +1,8 @@
 from fastapi import UploadFile, APIRouter, File, HTTPException
+from fastapi.responses import Response
 
 from backend.schemas.track_requests import RerouteRequest, TrimRequest
-from backend.services.track_loader import load_track
+from backend.services.track_loader import load_track, export_track
 from backend.services.track_session import TrackSessionManager
 
 router = APIRouter(prefix="/api/track", tags=["track"])
@@ -44,3 +45,37 @@ async def trim_track(req: TrimRequest):
         raise HTTPException(status_code=404, detail="Session not found")
     session.trim(start_idx=req.start_idx, end_idx=req.end_idx)
     return {"track": session.current_track.to_dict()}
+
+@router.post("/merge")
+async def merge_track(session_id: str, file: UploadFile = File(...)):
+    session = session_manager.get(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    second_track = await load_track(file)
+    session.merge_with(second_track)
+    return {"track": session.current_track.to_dict()}
+
+@router.get("/export")
+async def export_track(session_id: str, fmt: str, name: str):
+    """
+    export the current session track
+    :param fmt: 'gpx', 'tcx', 'fit' name: name of the file
+    :return:
+    """
+    session = session_manager.get(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    track = session.current_track
+
+    content = export_track(track, fmt)
+    data = content["data"]
+    filename = f"{name}.{fmt}"
+    media_type = content["media_type"]
+
+    return Response(
+        content=data,
+        media_type=media_type,
+        headers={"Content-Disposition": f'attachment; filename=\"{filename}\"'}
+    )
+
+
