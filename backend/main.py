@@ -1,4 +1,8 @@
+from pathlib import Path
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse, FileResponse
+
 from backend.routers import track
 
 app = FastAPI(
@@ -7,6 +11,13 @@ app = FastAPI(
 
 app.include_router(track.router)
 
-@app.get("/")
+BASE_DIR = Path(__file__).resolve().parent.parent
+FRONTEND_DIR = BASE_DIR / "frontend"
+STATIC_DIR = FRONTEND_DIR / "static"
+
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+app.mount("/libs", StaticFiles(directory=FRONTEND_DIR / "libs"), name="libs")
+
+@app.get("/", response_class=HTMLResponse)
 def root():
-    return {"status": "ok"}
+    return FileResponse(FRONTEND_DIR / "index.html")
