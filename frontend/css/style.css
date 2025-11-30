@@ -1,0 +1,16 @@
+body {
+    margin: 0;
+    padding: 0;
+}
+
+#top-bar {
+    padding: 8px;
+    background: #eee;
+    display: flex;
+    gap: 10px;
+}
+
+#map {
+    width: 100vw;
+    height: calc(100vh - 50px);
+}
