@@ -1,7 +1,7 @@
 import copy
 import uuid
 
-from typing import List
+from typing import List, Literal
 from backend.models.track import Track, TrackSegment, TrackPoint
 
 
@@ -45,6 +45,27 @@ class TrackSession:
         pass
 
     # Editing methods
+    def insert_point(self, segment_idx: int, before_point_idx_: int, lat: float, lon: float,
+                     pos: Literal["before", "inside", "after"]):
+        """Add a new point to the track"""
+        self._save_state()
+
+        # ========== CASE 1 — prepend ==========
+        if pos == "before":
+            case1
+
+        # ========== CASE 2 — append ===========
+        elif pos == "after":
+            case2
+
+        # ==== CASE 3 — inside (interpolate) ====
+        elif pos == "inside":
+            case3
+
+
+
+
+
     def reroute(self, segment_idx: int, point_idx: int, new_lat: float, new_lon: float,
                 mode: str = "snap"):
         """Reroutes a section of the track when a user moves a point."""
@@ -52,9 +73,9 @@ class TrackSession:
 
         segment = self.current_track.segments[segment_idx]
 
-        # Finding borders of the section to be rerouted. 20 points before the point_idx and 20 points after
-        left = max(0, point_idx - 20)
-        right = min(len(segment.points) - 1, point_idx + 20)
+        # Finding borders of the section to be rerouted. 10 points before the point_idx and 10 points after
+        left = max(0, point_idx - 10)
+        right = min(len(segment.points) - 1, point_idx + 10)
 
         start_point = segment.points[left]
         end_point = segment.points[right]
