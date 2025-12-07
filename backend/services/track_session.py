@@ -1,7 +1,8 @@
 import copy
 import uuid
-
-from typing import List, Literal
+from datetime import timedelta
+from typing import List
+from haversine import haversine
 from backend.models.track import Track, TrackSegment, TrackPoint
 
 
@@ -21,7 +22,7 @@ class TrackSession:
 
     MAX_HISTORY = 10 # Maximum saved states in history
 
-    # Auxilary methods
+    # Auxiliary methods
     def _save_state(self):
         """Saves the current state for undo()."""
         self._history.append(copy.deepcopy(self.current_track))
@@ -45,32 +46,84 @@ class TrackSession:
         pass
 
     # Editing methods
-    def insert_point(self, segment_idx: int, before_point_idx_: int, lat: float, lon: float,
-                     pos: Literal["before", "inside", "after"]):
-        """Add a new point to the track"""
+    def insert_point(self, segment_idx: int, before_point_idx: int, lat: float, lon: float):
+        """Adds a new point to the track"""
         self._save_state()
+        segment = self.current_track.segments[segment_idx]
+        # average speed of the track
+        if self.current_track.metadata["distance"] and self.current_track.metadata["duration"]:
+            speed = self.current_track.metadata["distance"] / self.current_track.metadata["duration"]
+        else:
+            speed = 5.0
 
         # ========== CASE 1 — prepend ==========
-        if pos == "before":
-            case1
+        if before_point_idx == -1:
+            # distance to the first point
+            d = haversine((lat, lon), (segment.points[0].lat, segment.points[0].lon))
+
+            dt = d / speed
+            new_time = segment.points[0].time - timedelta(seconds=dt)
+            new_point = TrackPoint(
+                lat=lat,
+                lon=lon,
+                time=new_time,
+                ele=segment.points[0].ele,
+                cadence=segment.points[0].cadence,
+                hr=segment.points[0].hr,
+                power=segment.points[0].power
+            )
+
+            segment.points.insert(0, new_point)
 
         # ========== CASE 2 — append ===========
-        elif pos == "after":
-            case2
+        elif before_point_idx == len(segment.points)-1:
+            # distance from the last point
+            d = haversine((segment.points[-1].lat, segment.points[-1].lon), (lat, lon))
+            dt = d / speed
+            new_time = segment.points[-1].time + timedelta(seconds=dt)
+            new_point = TrackPoint(
+                lat=lat,
+                lon=lon,
+                time=new_time,
+                ele=segment.points[-1].ele,
+                cadence=segment.points[-1].cadence,
+                hr=segment.points[-1].hr,
+                power=segment.points[-1].power
+            )
+
+            segment.points.append(new_point)
 
         # ==== CASE 3 — inside (interpolate) ====
-        elif pos == "inside":
-            case3
+        else:
+            d0 = haversine((segment.points[before_point_idx].lat, segment.points[before_point_idx].lon),
+                           (lat,lon))
+            d1 = haversine((lat, lon),
+                           (segment.points[before_point_idx+1].lat, segment.points[before_point_idx+1].lon))
 
+            # interpolation
+            t = d0 / (d0 + d1)
+            def interp(a, b):
+                return a + t * (b - a) if a is not None and b is not None else a or b
 
+            dt = (segment.points[before_point_idx+1].time - segment.points[before_point_idx].time).total_seconds() * t
 
+            new_point = TrackPoint(
+                lat=lat,
+                lon=lon,
+                time=segment.points[before_point_idx].time + timedelta(seconds=dt),
+                ele=interp(segment.points[before_point_idx].ele, segment.points[before_point_idx+1].ele),
+                cadence=interp(segment.points[before_point_idx].cadence, segment.points[before_point_idx+1].cadence),
+                hr=interp(segment.points[before_point_idx].hr, segment.points[before_point_idx+1].hr),
+                power=interp(segment.points[before_point_idx].power, segment.points[before_point_idx+1].power)
+            )
+
+            segment.points.insert(before_point_idx+1, new_point)
 
 
     def reroute(self, segment_idx: int, point_idx: int, new_lat: float, new_lon: float,
                 mode: str = "snap"):
         """Reroutes a section of the track when a user moves a point."""
         self._save_state()
-
         segment = self.current_track.segments[segment_idx]
 
         # Finding borders of the section to be rerouted. 10 points before the point_idx and 10 points after
@@ -135,7 +188,7 @@ class TrackSession:
             copy.deepcopy(other.segments)
         )
 
-    # Utilites
+    # Utilities
     def get_track(self) -> Track:
         """Returns the current state of the track."""
         return self.current_track

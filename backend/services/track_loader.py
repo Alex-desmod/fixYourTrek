@@ -25,8 +25,8 @@ async def load_track(file: UploadFile) -> Track:
     else:
         raise ValueError("Unsupported format: " + filename)
 
-async def export_track(track: Track, format: Literal["gpx", "fit", "tcx"]) -> dict:
-    if format == "gpx":
+async def export_track(track: Track, fmt: Literal["gpx", "fit", "tcx"]) -> dict:
+    if fmt == "gpx":
         return {"data": to_gpx(track), "media_type": "application/gpx+xml"}
 
 

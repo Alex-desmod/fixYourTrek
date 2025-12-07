@@ -11,7 +11,7 @@ router = APIRouter(prefix="/api/track", tags=["track"])
 session_manager = TrackSessionManager()
 
 @router.post("/upload")
-async def upload_track(file: UploadFile = File(...)):
+async def upload(file: UploadFile = File(...)):
     track = await load_track(file)
     if track is None:
         raise HTTPException(status_code=400, detail="Unsupported file format")
@@ -58,21 +58,18 @@ async def merge_track(session_id: str, file: UploadFile = File(...)):
     return {"track": session.current_track.to_dict()}
 
 @router.get("/export")
-async def export_track(session_id: str, format: Literal["gpx", "fit", "tcx"], name: str):
+async def export(session_id: str, fmt: Literal["gpx", "fit", "tcx"], name: str):
     """
-    export the current session track
-    :param format: 'gpx', 'tcx', 'fit'
-    :param name: name of the file
-    :return:
+    exports the current session track
     """
     session = session_manager.get(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
     track = session.current_track
 
-    content = export_track(track, format)
+    content = await export_track(track, fmt)
     data = content["data"]
-    filename = f"{name}.{format}"
+    filename = f"{name}.{fmt}"
     media_type = content["media_type"]
 
     return Response(
