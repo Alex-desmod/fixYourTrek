@@ -1,4 +1,18 @@
+from datetime import datetime
 from pydantic import BaseModel
+
+class InsertPointRequest(BaseModel):
+    session_id: str
+    segment_idx: int
+    prev_point_idx: int
+    lat: float
+    lon: float
+
+class UpdateTimeRequest(BaseModel):
+    session_id: str
+    segment_idx: int
+    point_idx: int
+    new_time: datetime
 
 class RerouteRequest(BaseModel):
     session_id: str

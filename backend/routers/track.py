@@ -3,7 +3,7 @@ from typing import Literal
 from fastapi import UploadFile, APIRouter, File, HTTPException
 from fastapi.responses import Response
 
-from backend.schemas.track_requests import RerouteRequest, TrimRequest
+from backend.schemas.track_requests import RerouteRequest, TrimRequest, InsertPointRequest, UpdateTimeRequest
 from backend.services.track_loader import load_track, export_track
 from backend.services.track_session import TrackSessionManager
 
@@ -18,6 +18,50 @@ async def upload(file: UploadFile = File(...)):
     session_id = session_manager.create_session(track)
     return {"session_id": session_id, "track": track.to_dict()}
 
+@router.post("/undo")
+async def undo(session_id: str):
+    session = session_manager.get(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    session.undo()
+    return {"track": session.current_track.to_dict()}
+
+@router.post("/redo")
+async def redo(session_id: str):
+    session = session_manager.get(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    session.redo()
+    return {"track": session.current_track.to_dict()}
+
+@router.post("/add_point")
+async def add_point(req: InsertPointRequest):
+    session = session_manager.get(req.session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    session.insert_point(
+        segment_idx=req.segment_idx,
+        prev_point_idx=req.prev_point_idx,
+        lat=req.lat,
+        lon=req.lon
+    )
+    return {"track": session.current_track.to_dict()}
+
+@router.post("/update_time")
+async def update_time(req: UpdateTimeRequest):
+    session = session_manager.get(req.session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    try:
+        session.update_time(
+            segment_idx=req.segment_idx,
+            point_idx=req.point_idx,
+            new_time=req.new_time
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return {"track": session.current_track.to_dict()}
+
 @router.post("/reroute")
 async def reroute_track(req: RerouteRequest):
     session = session_manager.get(req.session_id)
@@ -30,14 +74,6 @@ async def reroute_track(req: RerouteRequest):
         new_lon=req.new_lon,
         mode=req.mode
     )
-    return {"track": session.current_track.to_dict()}
-
-@router.post("/undo")
-async def undo(session_id: str):
-    session = session_manager.get(session_id)
-    if not session:
-        raise HTTPException(status_code=404, detail="Session not found")
-    session.undo()
     return {"track": session.current_track.to_dict()}
 
 @router.post("/trim")
