@@ -3,6 +3,18 @@ let trackPolyline = null;
 let startMarker = null;
 let endMarker = null;
 
+const startIcon = L.icon({
+    iconUrl: '/static/icons/start.svg',
+    iconSize: [32, 32],
+    iconAnchor: [16, 16]
+});
+
+const finishIcon = L.icon({
+    iconUrl: '/static/icons/finish.svg',
+    iconSize: [32, 32],
+    iconAnchor: [16, 16]
+});
+
 export function initMap() {
     map = L.map('map').setView([55.75, 37.6], 12);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
@@ -21,8 +33,8 @@ export function renderTrack(track) {
     map.fitBounds(trackPolyline.getBounds());
 
     if (points.length > 0) {
-        startMarker = L.marker(latlngs[0]).addTo(map);
-        endMarker = L.marker(latlngs.at(-1)).addTo(map);
+        startMarker = L.marker(latlngs[0], { icon: startIcon }).addTo(map);
+        endMarker   = L.marker(latlngs.at(-1), { icon: finishIcon }).addTo(map);
     }
 }
 

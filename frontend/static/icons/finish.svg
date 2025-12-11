@@ -1,0 +1,18 @@
+<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+
+  <!-- Белый внешний тонкий контур -->
+  <circle cx="16" cy="16" r="14" fill="white" stroke="white" stroke-width="2.5"></circle>
+
+  <!-- Чёрно-белые клетки -->
+  <defs>
+    <pattern id="checkered" x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse">
+      <rect x="0" y="0" width="4" height="4" fill="black"></rect>
+      <rect x="4" y="4" width="4" height="4" fill="black"></rect>
+      <rect x="4" y="0" width="4" height="4" fill="white"></rect>
+      <rect x="0" y="4" width="4" height="4" fill="white"></rect>
+    </pattern>
+  </defs>
+
+  <!-- Внутренний круг с клетками (без чёрной окантовки) -->
+  <circle cx="16" cy="16" r="11" fill="url(#checkered)"></circle>
+</svg>
