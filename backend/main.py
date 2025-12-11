@@ -17,6 +17,7 @@ STATIC_DIR = FRONTEND_DIR / "static"
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 app.mount("/libs", StaticFiles(directory=FRONTEND_DIR / "libs"), name="libs")
+app.mount("/js", StaticFiles(directory=FRONTEND_DIR / "js"), name="js")
 
 @app.get("/", response_class=HTMLResponse)
 def root():
