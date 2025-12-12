@@ -55,8 +55,11 @@ class TrackSession:
         self._save_state()
         segment = self.current_track.segments[segment_idx]
         # average speed of the track
-        if self.current_track.metadata["distance"] and self.current_track.metadata["duration"]:
-            speed = self.current_track.metadata["distance"] / self.current_track.metadata["duration"]
+        dist = self.current_track.metadata.get("distance")
+        dur = self.current_track.metadata.get("duration")
+
+        if dist is not None and dur is not None:
+            speed = dist / dur
         else:
             speed = 5.0
 

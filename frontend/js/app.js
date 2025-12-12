@@ -1,13 +1,14 @@
 import API from "./api.js";
-import { initMap, renderTrack, onMapClick } from "./map.js";
-import { distanceToSegment } from "./geometry.js";
+import { initMap, renderTrack, onMapClick, addTempMarker } from "./map.js";
 import { initMenu, initEditButton } from "./ui.js";
 
 let sessionId = null;
 let currentTrack = null;
 let editMode = false;
 
-// ---- Initialization ----
+// ========================
+//  INIT
+// ========================
 const map = initMap();
 
 initMenu(
@@ -17,7 +18,9 @@ initMenu(
 
 initEditButton(mode => editMode = mode);
 
-// ---- Upload file ----
+// ========================
+//  FILE UPLOAD
+// ========================
 document.getElementById("file-input").addEventListener("change", async e => {
     const file = e.target.files[0];
     if (!file) return;
@@ -29,33 +32,137 @@ document.getElementById("file-input").addEventListener("change", async e => {
     renderTrack(currentTrack);
 });
 
-// ---- Insert a point ----
-onMapClick(async e => {
+// ========================
+//  SELECT POINT MARKER
+// ========================
+const selectedPointIcon = L.divIcon({
+    className: "selected-point-marker",
+    iconSize: [10, 10],
+    iconAnchor: [5, 5]
+});
+
+// ========================
+//  ADD POINT REQUEST
+// ========================
+async function addPointRequest(segment_idx, prev_point_idx, lat, lon) {
+    const body = {
+        session_id: sessionId,
+        segment_idx,
+        prev_point_idx,
+        lat,
+        lon
+    };
+
+    const resp = await fetch("/api/track/add_point", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+    });
+
+    if (!resp.ok) {
+        const errText = await resp.text();
+        console.error("Server error:", resp.status, errText);
+        alert("Server error. Check console.");
+        return;
+    }
+
+    const data = await resp.json();
+    currentTrack = data.track;
+    renderTrack(currentTrack);
+
+    // mark added point
+    addTempMarker(lat, lon, selectedPointIcon);
+}
+
+// ========================
+//  MAP CLICK LOGIC
+// ========================
+onMapClick(async (e) => {
     if (!editMode || !currentTrack) return;
 
     const lat = e.latlng.lat;
     const lon = e.latlng.lng;
+    const click = { lat, lon };
 
-    const points = currentTrack.segments.flat();
-    let prevIdx = 0;
-    let minDist = Infinity;
+    const CLICK_POINT_PX = 12;
+    const CLICK_LINE_M = 18;
 
-    for (let i = 0; i < points.length - 1; i++) {
-        const d = distanceToSegment({lat, lon}, points[i], points[i+1]);
-        if (d < minDist) {
-            minDist = d;
-            prevIdx = i;
+    let selectedSeg = null;
+    let selectedIdx = null;
+    let minDistPoint = Infinity;
+
+    // -------------------------------------------------
+    // 1) CHECK CLICK ON EXISTING POINT
+    // -------------------------------------------------
+    for (let s = 0; s < currentTrack.segments.length; s++) {
+        const pts = currentTrack.segments[s].points;
+
+        for (let i = 0; i < pts.length; i++) {
+            const d = L.latLng(pts[i].lat, pts[i].lon).distanceTo(e.latlng);
+            if (d < minDistPoint) {
+                minDistPoint = d;
+                selectedSeg = s;
+                selectedIdx = i;
+            }
         }
     }
 
-    const req = {
-        session_id: sessionId,
-        segment_idx: 0,
-        prev_point_idx: prevIdx,
-        lat, lon
-    };
+    if (minDistPoint <= CLICK_POINT_PX) {
+        console.log("Selected existing point:", selectedSeg, selectedIdx);
 
-    const result = await API.addPoint(req);
-    currentTrack = result.track;
-    renderTrack(currentTrack);
+        const p = currentTrack.segments[selectedSeg].points[selectedIdx];
+        addTempMarker(p.lat, p.lon, selectedPointIcon);
+        return;
+    }
+
+    // -------------------------------------------------
+    // 2) CHECK CLICK ON SEGMENT (LINE)
+    // -------------------------------------------------
+    let best = { d: Infinity, segIdx: 0, prev: 0 };
+
+    function distToSegment(p, v, w) {
+        const pLL = L.latLng(p.lat, p.lon);
+        const vLL = L.latLng(v.lat, v.lon);
+        const wLL = L.latLng(w.lat, w.lon);
+
+        const closest = L.GeometryUtil.closestOnSegment(map, pLL, vLL, wLL);
+        return pLL.distanceTo(closest);
+        }
+
+    for (let s = 0; s < currentTrack.segments.length; s++) {
+        const pts = currentTrack.segments[s].points;
+
+        for (let i = 0; i < pts.length - 1; i++) {
+            const d = distToSegment(click, pts[i], pts[i+1]);
+            if (d < best.d) {
+                best = { d, segIdx: s, prev: i };
+            }
+        }
+    }
+
+    if (best.d <= CLICK_LINE_M) {
+        console.log("Insert in middle:", best);
+        await addPointRequest(best.segIdx, best.prev, lat, lon);
+        return;
+    }
+
+    // -------------------------------------------------
+    // 3) CLICK OUTSIDE TRACK — ADD TO START OR END
+    // -------------------------------------------------
+    const firstSeg = 0;
+    const lastSeg = currentTrack.segments.length - 1;
+
+    const startPoint = currentTrack.segments[0].points[0];
+    const endPoint = currentTrack.segments[lastSeg].points.at(-1);
+
+    const dStart = L.latLng(startPoint.lat, startPoint.lon).distanceTo(e.latlng);
+    const dEnd = L.latLng(endPoint.lat, endPoint.lon).distanceTo(e.latlng);
+
+    if (dStart < dEnd) {
+        console.log("Add before start → prev_point_idx=-1");
+        await addPointRequest(0, -1, lat, lon);
+    } else {
+        console.log("Add after end");
+        await addPointRequest(lastSeg, currentTrack.segments[lastSeg].points.length - 1, lat, lon);
+    }
 });

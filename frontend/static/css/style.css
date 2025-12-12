@@ -74,6 +74,14 @@ html, body {
     cursor: pointer;
 }
 
+.selected-point-marker {
+    width: 8px;
+    height: 8px;
+    background: white;
+    border: 2px solid black;
+    border-radius: 50%;
+}
+
 /* Mobile adjustments */
 @media (max-width: 600px) {
     #sidebar button {

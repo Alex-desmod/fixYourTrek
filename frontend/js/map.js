@@ -5,18 +5,18 @@ let endMarker = null;
 
 const startIcon = L.icon({
     iconUrl: '/static/icons/start.svg',
-    iconSize: [32, 32],
-    iconAnchor: [16, 16]
+    iconSize: [16, 16],
+    iconAnchor: [8, 8]
 });
 
 const finishIcon = L.icon({
     iconUrl: '/static/icons/finish.svg',
-    iconSize: [32, 32],
-    iconAnchor: [16, 16]
+    iconSize: [16, 16],
+    iconAnchor: [8, 8]
 });
 
 export function initMap() {
-    map = L.map('map').setView([55.75, 37.6], 12);
+    map = L.map('map').setView([25, 0], 2);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
     return map;
 }
@@ -41,3 +41,8 @@ export function renderTrack(track) {
 export function onMapClick(callback) {
     map.on("click", callback);
 }
+
+export function addTempMarker(lat, lon, icon) {
+    L.marker([lat, lon], { icon }).addTo(map);
+}
+
