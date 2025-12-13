@@ -98,7 +98,13 @@ onMapClick(async (e) => {
         const pts = currentTrack.segments[s].points;
 
         for (let i = 0; i < pts.length; i++) {
-            const d = L.latLng(pts[i].lat, pts[i].lon).distanceTo(e.latlng);
+            const p = pts[i];
+
+            // skipping points without GPS
+            if (p.lat === null || p.lon === null) continue;
+
+            const d = L.latLng(p.lat, p.lon).distanceTo(e.latlng);
+
             if (d < minDistPoint) {
                 minDistPoint = d;
                 selectedSeg = s;
@@ -106,6 +112,7 @@ onMapClick(async (e) => {
             }
         }
     }
+
 
     if (minDistPoint <= CLICK_POINT_PX) {
         console.log("Selected existing point:", selectedSeg, selectedIdx);
@@ -133,6 +140,14 @@ onMapClick(async (e) => {
         const pts = currentTrack.segments[s].points;
 
         for (let i = 0; i < pts.length - 1; i++) {
+            const a = pts[i];
+            const b = pts[i + 1];
+
+            if (
+                a.lat === null || a.lon === null ||
+                b.lat === null || b.lon === null
+            ) continue;
+
             const d = distToSegment(click, pts[i], pts[i+1]);
             if (d < best.d) {
                 best = { d, segIdx: s, prev: i };
@@ -152,8 +167,23 @@ onMapClick(async (e) => {
     const firstSeg = 0;
     const lastSeg = currentTrack.segments.length - 1;
 
-    const startPoint = currentTrack.segments[0].points[0];
-    const endPoint = currentTrack.segments[lastSeg].points.at(-1);
+    function firstValidPoint(points) {
+        return points.find(p => p.lat !== null && p.lon !== null);
+    }
+
+    function lastValidPoint(points) {
+        for (let i = points.length - 1; i >= 0; i--) {
+            if (points[i].lat !== null && points[i].lon !== null) {
+                return points[i];
+            }
+        }
+        return null;
+    }
+
+    const startPoint = firstValidPoint(currentTrack.segments[0].points);
+    const endPoint = lastValidPoint(
+        currentTrack.segments.at(-1).points
+    );
 
     const dStart = L.latLng(startPoint.lat, startPoint.lon).distanceTo(e.latlng);
     const dEnd = L.latLng(endPoint.lat, endPoint.lon).distanceTo(e.latlng);

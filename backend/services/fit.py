@@ -43,20 +43,18 @@ def load_fit(content: bytes) -> Track:
                 if lat_raw is not None and lon_raw is not None:
                     lat = lat_raw * 180 / 2 ** 31
                     lon = lon_raw * 180 / 2 ** 31
-                else:
-                    lat = lon = None
 
-                seg_points.append(
-                    TrackPoint(
-                        lat=lat,
-                        lon=lon,
-                        ele=d.get("altitude"),
-                        time=d.get("timestamp") if d.get("timestamp") else None,
-                        hr=d.get("heart_rate"),
-                        cadence=d.get("cadence"),
-                        power=d.get("power"),
+                    seg_points.append(
+                        TrackPoint(
+                            lat=lat,
+                            lon=lon,
+                            ele=d.get("altitude"),
+                            time=d.get("timestamp") if d.get("timestamp") else None,
+                            hr=d.get("heart_rate"),
+                            cadence=d.get("cadence"),
+                            power=d.get("power"),
+                        )
                     )
-                )
 
     return Track(
         segments=[TrackSegment(points=seg_points)],

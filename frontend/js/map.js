@@ -27,12 +27,15 @@ export function renderTrack(track) {
     if (endMarker) map.removeLayer(endMarker);
 
     const points = track.segments.flatMap(seg => seg.points);
-    const latlngs = points.map(p => [p.lat, p.lon]);
+    const latlngs = points
+        .filter(p => p.lat !== null && p.lon !== null)
+        .map(p => [p.lat, p.lon]);
+    if (latlngs.length < 2) return;
 
     trackPolyline = L.polyline(latlngs, {color: "blue"}).addTo(map);
     map.fitBounds(trackPolyline.getBounds());
 
-    if (points.length > 0) {
+    if (latlngs.length >= 2) {
         startMarker = L.marker(latlngs[0], { icon: startIcon }).addTo(map);
         endMarker   = L.marker(latlngs.at(-1), { icon: finishIcon }).addTo(map);
     }

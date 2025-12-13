@@ -12,9 +12,16 @@ export function initMenu(onOpen, onExport) {
 
 export function initEditButton(onToggle) {
     const btn = document.getElementById("btn-edit");
+    const mapEl = document.getElementById("map");
+
+    let active = false;
 
     btn.addEventListener("click", () => {
-        btn.classList.toggle("active");
-        onToggle(btn.classList.contains("active"));
+        active = !active;
+
+        btn.classList.toggle("active", active);
+        mapEl.classList.toggle("add-point-mode", active);
+
+        onToggle(active);
     });
 }
