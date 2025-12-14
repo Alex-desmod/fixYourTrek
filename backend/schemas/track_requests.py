@@ -20,7 +20,8 @@ class RerouteRequest(BaseModel):
     point_idx: int
     new_lat: float
     new_lon: float
-    mode: str = "snap"
+    mode: str = "straight"
+    radius_m: float
 
 class TrimRequest(BaseModel):
     session_id: str

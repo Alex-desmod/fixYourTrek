@@ -1,5 +1,5 @@
 import API from "./api.js";
-import { initMap, renderTrack, onMapClick, addTempMarker } from "./map.js";
+import { initMap, renderTrack, onMapClick, addPointMarker, clearPointMarkers } from "./map.js";
 import { initMenu, initEditButton } from "./ui.js";
 
 let sessionId = null;
@@ -37,8 +37,8 @@ document.getElementById("file-input").addEventListener("change", async e => {
 // ========================
 const selectedPointIcon = L.divIcon({
     className: "selected-point-marker",
-    iconSize: [10, 10],
-    iconAnchor: [5, 5]
+    iconSize: [8, 8],
+    iconAnchor: [4, 4]
 });
 
 // ========================
@@ -69,9 +69,6 @@ async function addPointRequest(segment_idx, prev_point_idx, lat, lon) {
     const data = await resp.json();
     currentTrack = data.track;
     renderTrack(currentTrack);
-
-    // mark added point
-    addTempMarker(lat, lon, selectedPointIcon);
 }
 
 // ========================
@@ -113,14 +110,22 @@ onMapClick(async (e) => {
         }
     }
 
-
     if (minDistPoint <= CLICK_POINT_PX) {
-        console.log("Selected existing point:", selectedSeg, selectedIdx);
+    console.log("Selected existing point:", selectedSeg, selectedIdx);
+    const p = currentTrack.segments[selectedSeg].points[selectedIdx];
+    addPointMarker(
+        selectedSeg,
+        selectedIdx,
+        p.lat,
+        p.lon,
+        async (newLat, newLon) => {
+            await reroutePoint(selectedSeg, selectedIdx, newLat, newLon);
+        }
+);
 
-        const p = currentTrack.segments[selectedSeg].points[selectedIdx];
-        addTempMarker(p.lat, p.lon, selectedPointIcon);
-        return;
+    return;
     }
+
 
     // -------------------------------------------------
     // 2) CHECK CLICK ON SEGMENT (LINE)
@@ -196,3 +201,34 @@ onMapClick(async (e) => {
         await addPointRequest(lastSeg, currentTrack.segments[lastSeg].points.length - 1, lat, lon);
     }
 });
+
+// ========================
+//  REROUTE LOGIC
+// ========================
+async function reroutePoint(segment_idx, point_idx, new_lat, new_lon, mode = "straight", radius_m = 50.0) {
+    const body = {
+        session_id: sessionId,
+        segment_idx,
+        point_idx,
+        new_lat,
+        new_lon,
+        mode,
+        radius_m
+    };
+
+    const resp = await fetch("/api/track/reroute", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+    });
+
+    if (!resp.ok) {
+        alert("Reroute failed");
+        return;
+    }
+
+    const data = await resp.json();
+    currentTrack = data.track;
+    renderTrack(currentTrack, { preserveView: true });
+    clearPointMarkers();
+}

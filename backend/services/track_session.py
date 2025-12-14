@@ -1,5 +1,6 @@
 import copy
 import uuid
+
 from datetime import timedelta, datetime
 from typing import List
 from haversine import haversine
@@ -145,16 +146,41 @@ class TrackSession:
         self._save_state()
         pts[point_idx].time = new_time
 
-
-    def reroute(self, segment_idx: int, point_idx: int, new_lat: float, new_lon: float,
-                mode: str = "straight"):
-        """Reroutes a section of the track when a user moves a point."""
+    def reroute(
+            self,
+            segment_idx: int,
+            point_idx: int,
+            new_lat: float,
+            new_lon: float,
+            mode: str = "straight",
+            radius_m: float = 50.0,  # influence radius in meters
+        ):
+        """
+        Smooth reroute using distance-based influence (meters).
+        Points within radius_m are moved proportionally.
+        """
         self._save_state()
         segment = self.current_track.segments[segment_idx]
+        points = segment.points
+
+        center = points[point_idx]
+        old_lat, old_lon = center.lat, center.lon
 
         if mode == "straight":
-            segment.points.pop(point_idx)
-            self.insert_point(segment_idx=segment_idx, prev_point_idx=point_idx-1, lat=new_lat, lon=new_lon)
+            for p in points:
+                # distance to the dragged point (meters)
+                d = haversine((old_lat, old_lon),(p.lat, p.lon)) * 1000
+                if d > radius_m:
+                    continue  # outside the influence
+
+                weight = 1.0 - (d / radius_m)
+                # smooth shift
+                p.lat += weight * (new_lat - old_lat)
+                p.lon += weight * (new_lon - old_lon)
+
+        # placement of the cental point
+        center.lat = new_lat
+        center.lon = new_lon
 
 
     def trim(self, start_idx: int, end_idx: int):
