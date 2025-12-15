@@ -15,12 +15,21 @@
 
 <!-- Top menu -->
 <div id="top-menu">
-    <div class="menu-item" id="menu-file">File ▾</div>
-
-    <div id="submenu-file" class="submenu hidden">
-        <div class="submenu-item" id="btn-open">Open…</div>
-        <div class="submenu-item" id="btn-export">Export…</div>
+    <div class="menu-item" data-menu="file">
+        <button class="top-menu-btn">File</button>
+        <div class="submenu">
+            <button class="submenu-btn" data-action="open">Open…</button>
+            <button class="submenu-btn" data-action="export">Export…</button>
+        </div>
     </div>
+    <div class="menu-item" data-menu="edit">
+        <button class="top-menu-btn">Edit</button>
+        <div class="submenu">
+            <button class="submenu-btn" data-action="undo">Undo</button>
+            <button class="submenu-btn" data-action="redo">Redo</button>
+        </div>
+    </div>
+
 
     <!-- Invisible input -->
     <input type="file" id="file-input" accept=".gpx,.tcx,.fit" style="display:none">
@@ -28,7 +37,7 @@
 
 <!-- Sidebar -->
 <div id="sidebar">
-    <button id="btn-edit" class="tool-button" title="Add point">✏️</button>
+    <button id="btn-edit-tool" class="tool-btn" title="Insert a point and edit the track">✏️</button>
 </div>
 
 <!-- Map -->

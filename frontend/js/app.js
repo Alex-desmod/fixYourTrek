@@ -11,10 +11,12 @@ let editMode = false;
 // ========================
 const map = initMap();
 
-initMenu(
-    () => document.getElementById("file-input").click(),
-    () => alert("Export coming soon...")
-);
+initMenu({
+    open: () => document.getElementById("file-input").click(),
+    export: () => alert("Export coming soon…"),
+    undo: () => console.log("Undo"),
+    redo: () => console.log("Redo")
+});
 
 initEditButton(mode => editMode = mode);
 

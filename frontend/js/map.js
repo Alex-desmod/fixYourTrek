@@ -18,8 +18,23 @@ const finishIcon = L.icon({
 });
 
 export function initMap() {
-    map = L.map('map').setView([25, 0], 2);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    map = L.map("map", {
+        zoomControl: false
+    }).setView([25, 0], 3);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "© OpenStreetMap"
+    }).addTo(map);
+
+    L.control.zoom({
+        position: "topright"
+    }).addTo(map);
+
+    L.control.scale({
+        position: "bottomright",
+        metric: true,
+        imperial: false,
+        maxWidth: 120
+    }).addTo(map);
     return map;
 }
 

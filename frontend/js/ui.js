@@ -1,17 +1,41 @@
-export function initMenu(onOpen, onExport) {
-    const menu = document.getElementById("menu-file");
-    const submenu = document.getElementById("submenu-file");
+export function initMenu(actions = {}) {
+    const menuItems = document.querySelectorAll("#top-menu .menu-item");
 
-    menu.addEventListener("click", () => {
-        submenu.classList.toggle("hidden");
+    menuItems.forEach(item => {
+        const button = item.querySelector(".top-menu-btn");
+
+        button.addEventListener("click", e => {
+            e.stopPropagation();
+
+            menuItems.forEach(i => {
+                if (i !== item) i.classList.remove("open");
+            });
+            item.classList.toggle("open");
+        });
     });
 
-    document.getElementById("btn-open").onclick = onOpen;
-    document.getElementById("btn-export").onclick = onExport;
+    document.querySelectorAll("#top-menu .submenu button")
+        .forEach(btn => {
+            btn.addEventListener("click", e => {
+                e.stopPropagation();
+
+                const action = btn.dataset.action;
+                if (action && actions[action]) {
+                    actions[action]();
+                }
+
+                menuItems.forEach(i => i.classList.remove("open"));
+            });
+        });
+
+    document.addEventListener("click", () => {
+        menuItems.forEach(i => i.classList.remove("open"));
+    });
 }
 
+
 export function initEditButton(onToggle) {
-    const btn = document.getElementById("btn-edit");
+    const btn = document.getElementById("btn-edit-tool");
     const mapEl = document.getElementById("map");
 
     let active = false;
