@@ -14,6 +14,27 @@ const API = {
             body: JSON.stringify(req)
         });
         return resp.json();
+    },
+
+    async updatePointTime(session_id, segment_idx, point_idx, time) {
+        const resp = await fetch("/api/track/update_time", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                session_id,
+                segment_idx,
+                point_idx,
+                time
+            })
+        });
+
+        const data = await resp.json();
+
+        if (!resp.ok) {
+            throw new Error(data.detail || "Update time failed");
+        }
+
+        return data;
     }
 };
 

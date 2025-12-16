@@ -27,6 +27,7 @@
         <div class="submenu">
             <button class="submenu-btn" data-action="undo">Undo</button>
             <button class="submenu-btn" data-action="redo">Redo</button>
+            <button class="submenu-btn" data-action="reset">Reset</button>
         </div>
     </div>
 
@@ -39,6 +40,30 @@
 <div id="sidebar">
     <button id="btn-edit-tool" class="tool-btn" title="Insert a point and edit the track">✏️</button>
 </div>
+
+<!-- Context menu on right click -->
+<div id="marker-context-menu" class="context-menu hidden">
+    <button data-action="edit-time">Change timestamp</button>
+
+    <div class="radius-control">
+        <label>
+            Influence radius (m)
+            <input type="range" min="20" max="1000" step="10">
+        </label>
+        <span class="radius-value">50</span>
+    </div>
+
+    <div class="time-editor hidden">
+        <label>
+            Time (HH:MM:SS)
+            <input type="time" step="1">
+        </label>
+        <button data-action="apply-time">Apply</button>
+    </div>
+</div>
+
+
+
 
 <!-- Map -->
 <div id="map"></div>
