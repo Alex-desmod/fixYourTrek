@@ -12,7 +12,7 @@ app = FastAPI(
 app.include_router(track.router)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-FRONTEND_DIR = BASE_DIR / "frontend"
+FRONTEND_DIR = BASE_DIR / "frontend_old"
 STATIC_DIR = FRONTEND_DIR / "static"
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
