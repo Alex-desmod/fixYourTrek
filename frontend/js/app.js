@@ -7,26 +7,23 @@ import {
     clearPointMarkers
 } from "./map.js";
 import { initMenu, initEditButton } from "./ui.js";
+import { distanceToSegment } from "./geometry.js";
 
 let sessionId = null;
 let currentTrack = null;
 let editMode = false;
 
-// ========================
-// INIT
-// ========================
 initMap();
 
 initMenu({
     open: () => document.getElementById("file-input").click(),
-    export: () => alert("Export coming soon…")
+    export: () => alert("Export coming soon")
 });
 
-initEditButton(mode => editMode = mode);
+initEditButton(v => editMode = v);
 
-// ========================
-// FILE UPLOAD
-// ========================
+// ---------- FILE UPLOAD ----------
+
 document.getElementById("file-input").addEventListener("change", async e => {
     const file = e.target.files[0];
     if (!file) return;
@@ -39,159 +36,69 @@ document.getElementById("file-input").addEventListener("change", async e => {
     renderTrack(currentTrack);
 });
 
-// ========================
-// MAP CLICK
-// ========================
+// ---------- MAP CLICK ----------
+
 onMapClick(async e => {
     if (!editMode || !currentTrack) return;
 
-    const clickLat = e.latlng.lat;
-    const clickLon = e.latlng.lng;
+    const click = e.latlng;
 
-    const CLICK_POINT_M = 10;
-    const CLICK_LINE_M = 15;
-
-    // -------------------------------------------------
-    // 1) CLICK ON EXISTING POINT
-    // -------------------------------------------------
-    let bestPoint = null;
-
+    // 1️⃣ EXISTING POINT
     for (let s = 0; s < currentTrack.segments.length; s++) {
         const pts = currentTrack.segments[s].points;
-
         for (let i = 0; i < pts.length; i++) {
             const p = pts[i];
-            if (p.lat == null || p.lon == null) continue;
+            if (!p.lat) continue;
 
-            const d = L.latLng(p.lat, p.lon)
-                .distanceTo(e.latlng);
+            if (L.latLng(p.lat, p.lon).distanceTo(click) < 10) {
+                addPointMarker(p, {
+                    onDragEnd: async (lat, lon, radius_m) => {
+                        const data = await API.reroutePoint({
+                            session_id: sessionId,
+                            segment_idx: s,
+                            point_idx: i,
+                            new_lat: lat,
+                            new_lon: lon,
+                            radius_m,
+                            mode: "straight"
+                        });
 
-            if (d < CLICK_POINT_M) {
-                bestPoint = { s, i, p };
-                break;
+                        currentTrack = data.track;
+                        renderTrack(currentTrack, { preserveView: true });
+                    }
+                });
+                return;
             }
         }
-        if (bestPoint) break;
     }
 
-    if (bestPoint) {
-        addPointMarker(
-            bestPoint.s,
-            bestPoint.i,
-            bestPoint.p.lat,
-            bestPoint.p.lon,
-            {
-                onDragEnd: async (newLat, newLon, radius_m) => {
-                    const data = await API.reroutePoint({
-                        session_id: sessionId,
-                        segment_idx: bestPoint.s,
-                        point_idx: bestPoint.i,
-                        new_lat: newLat,
-                        new_lon: newLon,
-                        radius_m,
-                        mode: "straight"
-                    });
-
-                    currentTrack = data.track;
-                    clearPointMarkers();
-                    renderTrack(currentTrack, { preserveView: true });
-                }
-            }
-        );
-        return;
-    }
-
-    // -------------------------------------------------
-    // 2) CLICK ON POLYLINE → INSERT POINT
-    // -------------------------------------------------
-    let best = { d: Infinity, seg: 0, prev: 0 };
+    // 2️⃣ POLYLINE
+    let best = { d: Infinity, s: 0, prev: 0 };
 
     for (let s = 0; s < currentTrack.segments.length; s++) {
         const pts = currentTrack.segments[s].points;
-
         for (let i = 0; i < pts.length - 1; i++) {
-            const a = pts[i];
-            const b = pts[i + 1];
-            if (!a.lat || !a.lon || !b.lat || !b.lon) continue;
+            const a = pts[i], b = pts[i + 1];
+            if (!a.lat || !b.lat) continue;
 
-            const closest = L.GeometryUtil.closestOnSegment(
-                map,
-                e.latlng,
-                L.latLng(a.lat, a.lon),
-                L.latLng(b.lat, b.lon)
-            );
-
-            const d = closest.distanceTo(e.latlng);
-            if (d < best.d) {
-                best = { d, seg: s, prev: i };
-            }
+            const d = distanceToSegment(click, a, b);
+            if (d < best.d) best = { d, s, prev: i };
         }
     }
 
-    if (best.d <= CLICK_LINE_M) {
+    if (best.d < 15) {
         const data = await API.addPoint({
             session_id: sessionId,
-            segment_idx: best.seg,
+            segment_idx: best.s,
             prev_point_idx: best.prev,
-            lat: clickLat,
-            lon: clickLon
+            lat: click.lat,
+            lon: click.lng
         });
 
         currentTrack = data.track;
         renderTrack(currentTrack);
 
-        // 👉 ВАЖНО: сразу показываем маркер новой точки
-        const newIdx = best.prev + 1;
-        const p = currentTrack.segments[best.seg].points[newIdx];
-
-        addPointMarker(best.seg, newIdx, p.lat, p.lon);
-        return;
-    }
-
-    // -------------------------------------------------
-    // 3) OUTSIDE TRACK → START OR END
-    // -------------------------------------------------
-    const first = currentTrack.segments[0].points.find(p => p.lat != null);
-    const lastSeg = currentTrack.segments.at(-1);
-    const last = [...lastSeg.points].reverse().find(p => p.lat != null);
-
-    const dStart = L.latLng(first.lat, first.lon).distanceTo(e.latlng);
-    const dEnd = L.latLng(last.lat, last.lon).distanceTo(e.latlng);
-
-    if (dStart < dEnd) {
-        const data = await API.addPoint({
-            session_id: sessionId,
-            segment_idx: 0,
-            prev_point_idx: -1,
-            lat: clickLat,
-            lon: clickLon
-        });
-
-        currentTrack = data.track;
-        renderTrack(currentTrack);
-
-        const p = currentTrack.segments[0].points[0];
-        addPointMarker(0, 0, p.lat, p.lon);
-    } else {
-        const lastIdx = lastSeg.points.length - 1;
-
-        const data = await API.addPoint({
-            session_id: sessionId,
-            segment_idx: currentTrack.segments.length - 1,
-            prev_point_idx: lastIdx,
-            lat: clickLat,
-            lon: clickLon
-        });
-
-        currentTrack = data.track;
-        renderTrack(currentTrack);
-
-        const p = currentTrack.segments.at(-1).points.at(-1);
-        addPointMarker(
-            currentTrack.segments.length - 1,
-            lastIdx + 1,
-            p.lat,
-            p.lon
-        );
+        const p = currentTrack.segments[best.s].points[best.prev + 1];
+        addPointMarker(p);
     }
 });

@@ -1,16 +1,27 @@
-export function distanceToSegment(p, v, w) {
-    const px = p.lat, py = p.lon;
-    const vx = v.lat, vy = v.lon;
-    const wx = w.lat, wy = w.lon;
+export function distanceToSegment(p, a, b) {
+    const latLngP = L.latLng(p.lat, p.lon);
+    const latLngA = L.latLng(a.lat, a.lon);
+    const latLngB = L.latLng(b.lat, b.lon);
 
-    const l2 = (vx - wx)**2 + (vy - wy)**2;
-    if (l2 === 0) return Math.hypot(px - vx, py - vy);
+    const px = latLngP.lng;
+    const py = latLngP.lat;
+    const ax = latLngA.lng;
+    const ay = latLngA.lat;
+    const bx = latLngB.lng;
+    const by = latLngB.lat;
 
-    let t = ((px - vx)*(wx - vx) + (py - vy)*(wy - vy)) / l2;
-    t = Math.max(0, Math.min(1, t));
+    const dx = bx - ax;
+    const dy = by - ay;
 
-    const projx = vx + t * (wx - vx);
-    const projy = vy + t * (wy - vy);
+    if (dx === 0 && dy === 0) {
+        return latLngP.distanceTo(latLngA);
+    }
 
-    return Math.hypot(px - projx, py - projy);
+    const t = ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy);
+    const clamped = Math.max(0, Math.min(1, t));
+
+    const projLat = ay + clamped * dy;
+    const projLon = ax + clamped * dx;
+
+    return latLngP.distanceTo(L.latLng(projLat, projLon));
 }
