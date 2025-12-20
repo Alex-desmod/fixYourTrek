@@ -1,26 +1,88 @@
 <script setup lang="ts">
+import { uploadTrack } from '@/api/trackApi'
+import { useTrackStore } from '@/store/trackStore'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
+
+type Menu = 'file' | 'edit' | null
+const openMenu = ref<Menu>(null)
+
+function toggle(menu: Menu) {
+  openMenu.value = openMenu.value === menu ? null : menu
+}
+
+function close() {
+  openMenu.value = null
+}
+
+function onClickOutside(e: MouseEvent) {
+  const target = e.target as HTMLElement
+  if (!target.closest('#top-menu')) {
+    close()
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', onClickOutside)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', onClickOutside)
+})
+
+const store = useTrackStore()
+const fileInput = ref<HTMLInputElement | null>(null)
+
+/* File → Open… */
+function onOpenClick() {
+  fileInput.value?.click()
+}
+
+/* choose a file */
+async function onFileSelected(e: Event) {
+  const input = e.target as HTMLInputElement
+  if (!input.files || input.files.length === 0) return
+
+  try {
+    const result = await uploadTrack(input.files[0])
+    store.setSession(result.session_id, result.track)
+  } catch (err) {
+    console.error('Upload failed', err)
+    alert('Failed to upload track')
+  } finally {
+    input.value = '' // to upload the same file once again
+    close()
+  }
+}
+
 </script>
 
 
 <template>
     <div id="top-menu">
         <div class="menu-item">
-            <button class="top-menu-btn">File</button>
-            <div class="submenu">
-                <button class="submenu-btn">Open…</button>
+            <button class="top-menu-btn" @click.stop="toggle('file')">File</button>
+            <div class="submenu" v-show="openMenu === 'file'">
+                <button class="submenu-btn" @click.stop="onOpenClick">Open…</button>
                 <button class="submenu-btn">Export…</button>
             </div>
         </div>
 
-
         <div class="menu-item">
-            <button class="top-menu-btn">Edit</button>
-            <div class="submenu">
+            <button class="top-menu-btn" @click.stop="toggle('edit')">Edit</button>
+            <div class="submenu" v-show="openMenu === 'edit'">
                 <button class="submenu-btn">Undo</button>
                 <button class="submenu-btn">Redo</button>
                 <button class="submenu-btn">Reset</button>
             </div>
         </div>
+
+        <input
+            ref="fileInput"
+            type="file"
+            accept=".gpx,.fit,.tcx"
+            hidden
+            @change="onFileSelected"
+        />
     </div>
 </template>
 
@@ -66,10 +128,10 @@
 .submenu {
     position: absolute;
     top: 100%;
+    left: 0;
     margin-top: 6px;
     background: rgba(255,255,255,0.8);
     text-align: left;
-    display: none;
     z-index: 1100;
 }
 
@@ -86,7 +148,4 @@
     background: #eee;
 }
 
-.menu-item:hover .submenu {
-    display: block;
-}
 </style>
