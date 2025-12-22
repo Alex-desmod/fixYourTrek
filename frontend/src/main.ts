@@ -5,6 +5,7 @@ import App from './App.vue'
 import 'leaflet/dist/leaflet.css'
 
 
-createApp(App)
-    .use(createPinia())
-    .mount('#app')
+const app = createApp(App)
+
+app.use(createPinia())
+app.mount('#app')

@@ -53,7 +53,6 @@ async function onFileSelected(e: Event) {
     close()
   }
 }
-
 </script>
 
 

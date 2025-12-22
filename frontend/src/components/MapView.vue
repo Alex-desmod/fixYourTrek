@@ -1,32 +1,44 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import { useTrackStore } from '@/store/trackStore'
+import { renderTrack } from '@/utils/renderTrack'
 
 const mapEl = ref<HTMLDivElement | null>(null)
-let map: L.Map
+const map = ref<L.Map | null>(null)
+const store = useTrackStore()
 
 onMounted(() => {
   if (!mapEl.value) return
 
-  map = L.map(mapEl.value, {
+  map.value = L.map(mapEl.value, {
     zoomControl: false
   }).setView([20, 0], 3)
 
   L.control.zoom({
     position: 'topright'
-  }).addTo(map)
+  }).addTo(map.value)
 
   L.control.scale({
     position: 'bottomright',
     metric: true,
     imperial: false
-  }).addTo(map)
+  }).addTo(map.value)
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
-  }).addTo(map)
+  }).addTo(map.value)
 })
+
+watch(
+  () => store.track,
+  (track) => {
+    if (!track || !map.value) return
+    renderTrack(map.value, track)
+  },
+  { immediate: true }
+)
 </script>
 
 <template>
