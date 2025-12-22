@@ -1,4 +1,5 @@
 import L from 'leaflet'
+import { renderStartFinishMarkers } from './startFinishMarkers'
 
 let polyline: L.Polyline | null = null
 
@@ -7,8 +8,7 @@ export function renderTrack(
   track: any,
   { preserveView = false } = {}
 ) {
-  console.log('renderTrack called', { map, track })
-  if (polyline) {
+    if (polyline) {
     map.removeLayer(polyline)
     polyline = null
   }
@@ -29,4 +29,6 @@ export function renderTrack(
   if (!preserveView) {
     map.fitBounds(polyline.getBounds(), { padding: [20, 20] })
   }
+
+  renderStartFinishMarkers(map, pts)
 }

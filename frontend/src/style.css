@@ -77,6 +77,20 @@ button:focus-visible {
   text-align: center;
 }
 
+.track-marker svg {
+  width: 100%;
+  height: 100%;
+  fill: #2ecc71;
+}
+
+.finish-marker svg {
+  fill: #e74c3c;
+}
+
+.track-marker:hover svg {
+  transform: scale(1.1);
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
