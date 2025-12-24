@@ -54,17 +54,15 @@ button {
 }
 
 button:hover {
-  background: #eee;
+  background: #e0e0e0;
 }
 
 button:focus {
     outline: none;
-    background: #e6e6e6;
 }
 
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
-  background: #e6e6e6;
 }
 
 .card {
@@ -75,6 +73,10 @@ button:focus-visible {
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+}
+
+.leaflet-container.insert-mode {
+  cursor: crosshair;
 }
 
 .track-marker svg {
@@ -89,6 +91,19 @@ button:focus-visible {
 
 .track-marker:hover svg {
   transform: scale(1.1);
+}
+
+.point-marker {
+  pointer-events: auto;
+}
+
+.point-marker__inner {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid black;
+  box-shadow: 0 0 4px rgba(0,0,0,0.4);
 }
 
 @media (prefers-color-scheme: light) {

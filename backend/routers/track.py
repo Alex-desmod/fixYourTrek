@@ -3,7 +3,8 @@ from typing import Literal
 from fastapi import UploadFile, APIRouter, File, HTTPException
 from fastapi.responses import Response
 
-from backend.schemas.track_requests import RerouteRequest, TrimRequest, InsertPointRequest, UpdateTimeRequest
+from backend.schemas.track_requests import (SessionRequest, RerouteRequest, TrimRequest,
+                                            InsertPointRequest, UpdateTimeRequest)
 from backend.services.track_loader import load_track, export_track
 from backend.services.track_session import TrackSessionManager
 
@@ -19,19 +20,33 @@ async def upload(file: UploadFile = File(...)):
     return {"session_id": session_id, "track": track.to_dict()}
 
 @router.post("/undo")
-async def undo(session_id: str):
-    session = session_manager.get(session_id)
+async def undo(req: SessionRequest):
+    session = session_manager.get(req.session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
+    print(session._history_idx, len(session._history))
     session.undo()
+    print(session._history_idx, len(session._history))
     return {"track": session.current_track.to_dict()}
 
 @router.post("/redo")
-async def redo(session_id: str):
-    session = session_manager.get(session_id)
+async def redo(req: SessionRequest):
+    session = session_manager.get(req.session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
+    print(session._history_idx, len(session._history))
     session.redo()
+    print(session._history_idx, len(session._history))
+    return {"track": session.current_track.to_dict()}
+
+@router.post("/reset")
+async def reset(req: SessionRequest):
+    session = session_manager.get(req.session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    print(session._history_idx, len(session._history))
+    session.reset()
+    print(session._history_idx, len(session._history))
     return {"track": session.current_track.to_dict()}
 
 @router.post("/add_point")

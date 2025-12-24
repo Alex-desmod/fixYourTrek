@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { uploadTrack } from '@/api/trackApi'
+import { undo, redo, reset } from '@/api/historyApi'
 import { useTrackStore } from '@/store/trackStore'
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 
@@ -53,6 +54,41 @@ async function onFileSelected(e: Event) {
     close()
   }
 }
+
+async function onUndo() {
+  if (!store.sessionId) return
+
+  try {
+    const res = await undo(store.sessionId)
+    store.track = res.track
+  } catch (e) {
+    console.error('Undo failed', e)
+  }
+}
+
+async function onRedo() {
+  if (!store.sessionId) return
+
+  try {
+    const res = await redo(store.sessionId)
+    store.track = res.track
+  } catch (e) {
+    console.error('Redo failed', e)
+  }
+}
+
+async function onReset() {
+  if (!store.sessionId) return
+
+  if (!confirm('Reset all changes?')) return
+
+  try {
+    const res = await reset(store.sessionId)
+    store.track = res.track
+  } catch (e) {
+    console.error('Reset failed', e)
+  }
+}
 </script>
 
 
@@ -69,9 +105,9 @@ async function onFileSelected(e: Event) {
         <div class="menu-item">
             <button class="top-menu-btn" @click.stop="toggle('edit')">Edit</button>
             <div class="submenu" v-show="openMenu === 'edit'">
-                <button class="submenu-btn">Undo</button>
-                <button class="submenu-btn">Redo</button>
-                <button class="submenu-btn">Reset</button>
+                <button class="submenu-btn" @click="onUndo">Undo</button>
+                <button class="submenu-btn" @click="onRedo">Redo</button>
+                <button class="submenu-btn" @click="onReset">Reset</button>
             </div>
         </div>
 
@@ -116,11 +152,11 @@ async function onFileSelected(e: Event) {
 }
 
 .top-menu-btn:hover {
-    background: #eee;
+    background: #e0e0e0;
 }
 
 .top-menu-btn:active {
-    background: #e6e6e6;
+    background: #d1d1d1;
     box-shadow: inset 0 1px 3px rgba(0,0,0,0.15);
 }
 

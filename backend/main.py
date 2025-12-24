@@ -7,6 +7,7 @@ from backend.routers import track
 
 app = FastAPI(
     title="fix your fucking track",
+    debug=True
 )
 
 app.include_router(track.router)

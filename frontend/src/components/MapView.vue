@@ -4,6 +4,7 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useTrackStore } from '@/store/trackStore'
 import { renderTrack } from '@/utils/renderTrack'
+import { enableInsertPointMode, disableInsertPointMode } from '@/utils/insertPoint'
 
 const mapEl = ref<HTMLDivElement | null>(null)
 const map = ref<L.Map | null>(null)
@@ -36,6 +37,22 @@ watch(
   (track) => {
     if (!track || !map.value) return
     renderTrack(map.value, track)
+  },
+  { immediate: true }
+)
+
+watch(
+  () => store.insertMode,
+  (enabled) => {
+    if (!map.value) return
+    const container = map.value.getContainer()
+    container.classList.toggle('insert-mode', enabled)
+
+    if (enabled) {
+      enableInsertPointMode(map.value)
+    } else {
+      disableInsertPointMode(map.value)
+    }
   },
   { immediate: true }
 )

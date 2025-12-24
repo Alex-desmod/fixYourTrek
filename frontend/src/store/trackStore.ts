@@ -3,7 +3,9 @@ import { defineStore } from 'pinia'
 export const useTrackStore = defineStore('track', {
   state: () => ({
     sessionId: null as string | null,
-    track: null as any
+    track: null as any,
+    insertMode: false,
+    selectedPoint: null as any
   }),
 
   actions: {
@@ -15,6 +17,13 @@ export const useTrackStore = defineStore('track', {
     clear() {
       this.sessionId = null
       this.track = null
+    },
+
+    setInsertMode(val: boolean) {
+      this.insertMode = val
+    },
+    selectPoint(p: any) {
+      this.selectedPoint = p
     }
   }
 })

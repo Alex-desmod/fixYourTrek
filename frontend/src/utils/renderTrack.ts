@@ -1,5 +1,5 @@
 import L from 'leaflet'
-import { renderStartFinishMarkers } from './startFinishMarkers'
+import { renderStartFinishMarkers } from './markers'
 
 let polyline: L.Polyline | null = null
 

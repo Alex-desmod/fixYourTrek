@@ -21,29 +21,42 @@ class TrackSession:
         # Previous states
         self._history: List[Track] = []
 
+        # Current index of the history list
+        self._history_idx: int = -1
+        self._save_state()
+
     MAX_HISTORY = 10 # Maximum saved states in history
 
     # Auxiliary methods
     def _save_state(self):
         """Saves the current state."""
+        # If we are not at the end of history — cut redo states
+        if self._history_idx < len(self._history) - 1:
+            self._history = self._history[: self._history_idx + 1]
+
+        # Save current state
         self._history.append(copy.deepcopy(self.current_track))
+        self._history_idx += 1
+
+        # Enforce history size limit
         if len(self._history) > self.MAX_HISTORY:
             self._history.pop(0)
+            self._history_idx -= 1
 
     def undo(self) -> bool:
-        if not self._history:
+        if self._history_idx <= 0:
             return False
-        current_idx = self._history.index(self.current_track)
-        if current_idx > 0:
-            self.current_track = self._history[current_idx-1]
+
+        self._history_idx -= 1
+        self.current_track = copy.deepcopy(self._history[self._history_idx])
         return True
 
     def redo(self) -> bool:
-        if not self._history:
+        if self._history_idx >= len(self._history) - 1:
             return False
-        current_idx = self._history.index(self.current_track)
-        if current_idx < len(self._history)-1:
-            self.current_track = self._history[current_idx+1]
+
+        self._history_idx += 1
+        self.current_track = copy.deepcopy(self._history[self._history_idx])
         return True
 
     def _route_via_osrm(self, start_point, new_lat, new_lon, end_point) -> List[TrackPoint]:
@@ -224,8 +237,8 @@ class TrackSession:
 
     def reset(self):
         """Resets to the original track."""
-        self.current_track = copy.deepcopy(self.original_track)
-        self._history = []
+        self._history_idx = 0
+        self.current_track = copy.deepcopy(self._history[self._history_idx])
 
 
 class TrackSessionManager:

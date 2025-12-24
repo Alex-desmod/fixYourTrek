@@ -1,6 +1,9 @@
 from datetime import datetime
 from pydantic import BaseModel
 
+class SessionRequest(BaseModel):
+    session_id: str
+
 class InsertPointRequest(BaseModel):
     session_id: str
     segment_idx: int
