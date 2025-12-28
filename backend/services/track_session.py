@@ -238,6 +238,7 @@ class TrackSession:
     def reset(self):
         """Resets to the original track."""
         self._history_idx = 0
+        self._history = self._history[:1]
         self.current_track = copy.deepcopy(self._history[self._history_idx])
 
 

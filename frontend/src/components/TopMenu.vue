@@ -45,7 +45,7 @@ async function onFileSelected(e: Event) {
 
   try {
     const result = await uploadTrack(input.files[0])
-    store.setSession(result.session_id, result.track)
+    store.setSession(result.session_id, result.track, 'upload')
   } catch (err) {
     console.error('Upload failed', err)
     alert('Failed to upload track')
@@ -60,7 +60,7 @@ async function onUndo() {
 
   try {
     const res = await undo(store.sessionId)
-    store.track = res.track
+    store.setTrack(res.track, 'undo')
   } catch (e) {
     console.error('Undo failed', e)
   }
@@ -71,7 +71,7 @@ async function onRedo() {
 
   try {
     const res = await redo(store.sessionId)
-    store.track = res.track
+    store.setTrack(res.track, 'redo')
   } catch (e) {
     console.error('Redo failed', e)
   }
@@ -84,7 +84,7 @@ async function onReset() {
 
   try {
     const res = await reset(store.sessionId)
-    store.track = res.track
+    store.setTrack(res.track, 'reset')
   } catch (e) {
     console.error('Reset failed', e)
   }

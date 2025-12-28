@@ -2,6 +2,11 @@ import L from 'leaflet'
 import { pointIcon, startIcon, finishIcon } from './icons'
 
 const pointMarkers = new WeakMap<any, L.Marker>()
+const allPointMarkers = new Set<L.Marker>()
+// UI state per point
+const pointUI = new WeakMap<any, { influenceRadius: number }>()
+// points whose marker is hidden by user
+const hiddenPoints = new WeakSet<any>()
 
 let startMarker: L.Marker | null = null
 let finishMarker: L.Marker | null = null
@@ -11,15 +16,27 @@ let finishMarker: L.Marker | null = null
 export function renderPointMarker(
   map: L.Map,
   point: any,
-  { draggable = true } = {}
+  onContextMenu?: (point: any, latlng: L.LatLng) => void
 ) {
+  if (hiddenPoints.has(point)) return
+
   let marker = pointMarkers.get(point)
 
   if (!marker) {
+    if (!pointUI.has(point)) {
+      pointUI.set(point, { influenceRadius: 50 })
+    }
+
     marker = L.marker([point.lat, point.lon], {
       icon: pointIcon,
-      draggable
+      draggable: true
     }).addTo(map)
+
+    marker.on('contextmenu', (e) => {
+      if (onContextMenu) {
+        onContextMenu(point, e.latlng)
+      }
+    })
 
     marker.on('dragend', (e) => {
       const { lat, lng } = e.target.getLatLng()
@@ -28,6 +45,7 @@ export function renderPointMarker(
     })
 
     pointMarkers.set(point, marker)
+    allPointMarkers.add(marker)
   } else {
     marker.setLatLng([point.lat, point.lon])
   }
@@ -35,11 +53,26 @@ export function renderPointMarker(
   return marker
 }
 
+export function hidePointMarker(map: L.Map, point: any) {
+  const marker = pointMarkers.get(point)
+  if (!marker) return
+
+  map.removeLayer(marker)
+  allPointMarkers.delete(marker)
+  pointMarkers.delete(point)
+  pointUI.delete(point)
+  hiddenPoints.add(point)
+}
+
+export function getPointUI(point: any) {
+  return pointUI.get(point)
+}
+
 export function clearPointMarkers(map: L.Map) {
-  for (const marker of pointMarkers.values()) {
+  for (const marker of allPointMarkers) {
     map.removeLayer(marker)
   }
-  pointMarkers.clear()
+  allPointMarkers.clear()
 }
 
 /* ---------- START / FINISH ---------- */

@@ -24,9 +24,7 @@ async def undo(req: SessionRequest):
     session = session_manager.get(req.session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
-    print(session._history_idx, len(session._history))
     session.undo()
-    print(session._history_idx, len(session._history))
     return {"track": session.current_track.to_dict()}
 
 @router.post("/redo")
@@ -34,9 +32,7 @@ async def redo(req: SessionRequest):
     session = session_manager.get(req.session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
-    print(session._history_idx, len(session._history))
     session.redo()
-    print(session._history_idx, len(session._history))
     return {"track": session.current_track.to_dict()}
 
 @router.post("/reset")
@@ -44,9 +40,7 @@ async def reset(req: SessionRequest):
     session = session_manager.get(req.session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
-    print(session._history_idx, len(session._history))
     session.reset()
-    print(session._history_idx, len(session._history))
     return {"track": session.current_track.to_dict()}
 
 @router.post("/add_point")
@@ -87,7 +81,8 @@ async def reroute_track(req: RerouteRequest):
         point_idx=req.point_idx,
         new_lat=req.new_lat,
         new_lon=req.new_lon,
-        mode=req.mode
+        mode=req.mode,
+        radius_m=req.radius_m
     )
     return {"track": session.current_track.to_dict()}
 
