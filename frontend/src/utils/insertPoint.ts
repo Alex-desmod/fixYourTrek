@@ -9,84 +9,87 @@ let clickHandler: ((e: L.LeafletMouseEvent) => void) | null = null
 /**
  * Enable "Insert a point" mode
  */
-export function enableInsertPointMode(map: L.Map) {
-  const store = useTrackStore()
+export function enableInsertPointMode(
+    map: L.Map,
+    onPointContextMenu?: (point: any, e: MouseEvent) => void
+) {
+    const store = useTrackStore()
 
-  clickHandler = async (e: L.LeafletMouseEvent) => {
-    const track = store.track
-    const sessionId = store.sessionId
+    clickHandler = async (e: L.LeafletMouseEvent) => {
+        const track = store.track
+        const sessionId = store.sessionId
 
-    if (!track || !sessionId) return
+        if (!track || !sessionId) return
 
-    const { lat, lng } = e.latlng
+        const { lat, lng } = e.latlng
 
-    // Define what to do with the click
-    const action = resolveInsertAction(track, lat, lng)
+        // Define what to do with the click
+        const action = resolveInsertAction(track, lat, lng)
 
-    // Select an existing point
-    if (action.type === 'select-existing') {
-      store.selectPoint(action.point)
-      renderPointMarker(map, action.point, true)
-      return
-    }
-
-    function findPointInTrack(track: any, lat: number, lon: number) {
-      for (const seg of track.segments) {
-        for (const p of seg.points) {
-          if (
-            Math.abs(p.lat - lat) < 1e-9 &&
-            Math.abs(p.lon - lon) < 1e-9
-          ) {
-            return p
-          }
+        // Select an existing point
+        if (action.type === 'select-existing') {
+            store.selectPoint(action.point)
+            renderPointMarker(map, action.point, onPointContextMenu)
+            return
         }
-      }
-      return null
+
+        function findPointInTrack(track: any, lat: number, lon: number) {
+            for (const seg of track.segments) {
+                for (const p of seg.points) {
+                    if (
+                        Math.abs(p.lat - lat) < 1e-9 &&
+                        Math.abs(p.lon - lon) < 1e-9
+                    ) {
+                        return p
+                    }
+                }
+            }
+            return null
+        }
+
+
+        // Add a new point
+        try {
+            const payload = {
+                session_id: sessionId,
+                segment_idx: action.segmentIdx,
+                prev_point_idx: action.prevPointIdx,
+                lat,
+                lon: lng
+            }
+
+            const res = await addPoint(payload)
+            /**
+                * Awaiting from the backend:
+                * {
+                *   track: updatedTrack,
+                *   point: newlyCreatedPoint
+                * }
+            */
+
+            store.track = res.track
+            const newPoint = findPointInTrack(res.track, lat, lng)
+            if (!newPoint) {
+                console.warn('Inserted point not found in track')
+                return
+            }
+
+            store.selectPoint(newPoint)
+            renderPointMarker(map, newPoint, onPointContextMenu)
+        } catch (err) {
+            console.error('Failed to add point', err)
+        }
     }
 
-
-    // Add a new point
-    try {
-      const payload = {
-        session_id: sessionId,
-        segment_idx: action.segmentIdx,
-        prev_point_idx: action.prevPointIdx,
-        lat,
-        lon: lng
-      }
-
-      const res = await addPoint(payload)
-      /**
-       * Awaiting from the backend:
-       * {
-       *   track: updatedTrack,
-       *   point: newlyCreatedPoint
-       * }
-       */
-
-      store.track = res.track
-      const newPoint = findPointInTrack(res.track, lat, lng)
-      if (!newPoint) {
-        console.warn('Inserted point not found in track')
-        return
-      }
-
-      store.selectPoint(newPoint)
-      renderPointMarker(map, newPoint, true)
-    } catch (err) {
-      console.error('Failed to add point', err)
-    }
-  }
-
-  map.on('click', clickHandler)
+    map.on('click', clickHandler)
 }
 
 /**
  * Disable "Insert a point" mode
  */
 export function disableInsertPointMode(map: L.Map) {
-  if (clickHandler) {
-    map.off('click', clickHandler)
-    clickHandler = null
-  }
+    if (clickHandler) {
+        map.off('click', clickHandler)
+        clickHandler = null
+    }
 }
