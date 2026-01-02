@@ -66,3 +66,13 @@ function onDelete() {
         <button class="danger" @click="onDelete">Delete</button>
     </div>
 </template>
+
+<style scoped>
+.context-menu {
+  position: fixed;
+  z-index: 5000;
+  background: white;
+  border: 1px solid #ccc;
+  pointer-events: auto;
+}
+</style>
