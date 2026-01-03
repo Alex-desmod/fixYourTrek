@@ -46,6 +46,7 @@ function onDelete() {
     <div
         class="context-menu"
         :style="{ left: position!.x + 'px', top: position!.y + 'px' }"
+        @mousedown.stop
     >
         <label>
             Influence radius: {{ radius }} m

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, onBeforeUnmount, ref, watch } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useTrackStore } from '@/store/trackStore'
@@ -16,6 +16,17 @@ const store = useTrackStore()
 const contextPoint = ref<any | null>(null)
 const contextPos = ref<{ x: number; y: number } | null>(null)
 const contextRadius = ref(50)
+
+function onGlobalClick(e: MouseEvent) {
+    if (!contextPoint.value) return
+
+    const menuEl = document.querySelector('.context-menu')
+    if (menuEl && menuEl.contains(e.target as Node)) {
+        return // клик внутри меню — не закрываем
+    }
+
+    closeContextMenu()
+}
 
 onMounted(() => {
     if (!mapEl.value) return
@@ -40,6 +51,14 @@ onMounted(() => {
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
     }).addTo(map.value)
+
+    document.addEventListener('mousedown', onGlobalClick)
+    document.removeEventListener('keydown', onKeyDown)
+})
+
+onBeforeUnmount(() => {
+    document.removeEventListener('mousedown', onGlobalClick)
+    document.removeEventListener('keydown', onKeyDown)
 })
 
 function openContextMenu(point: any, e: MouseEvent) {
@@ -54,6 +73,12 @@ function openContextMenu(point: any, e: MouseEvent) {
 function closeContextMenu() {
     contextPoint.value = null
     contextPos.value = null
+}
+
+function onKeyDown(e: KeyboardEvent) {
+    if (e.key === 'Escape') {
+        closeContextMenu()
+    }
 }
 
 function onDeleteMarker() {
