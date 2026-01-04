@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useTrackStore } from '@/store/trackStore'
+import { findPointLocation } from '@/utils/findPointLocation'
 import { updateTime } from '@/api/trackApi'
 
 const props = defineProps<{
@@ -30,15 +31,20 @@ watch(radius, v => emit('update-radius', v))
 async function applyTime() {
     if (!props.point || !newTime.value) return
 
+    const loc = findPointLocation(store.track, props.point)
+    if (!loc) {
+        console.warn('Point not found in track')
+        return
+    }
+
     const base = new Date(props.point.time)
     const [h, m, s] = newTime.value.split(':').map(Number)
-
     base.setHours(h, m, s ?? 0, 0)
 
     const res = await updateTime({
         session_id: store.sessionId!,
-        segment_idx: props.point.segment_idx,
-        point_idx: props.point.point_idx,
+        segment_idx: loc.segment_idx,
+        point_idx: loc.point_idx,
         new_time: base.toISOString()
     })
 

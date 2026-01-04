@@ -58,7 +58,7 @@ export async function updateTime(payload: {
 
     if (!res.ok) {
         const text = await res.text()
-        throw new Error(`add_point failed: ${res.status} ${text}`)
+        throw new Error(`update_time failed: ${res.status} ${text}`)
     }
 
     return await res.json()

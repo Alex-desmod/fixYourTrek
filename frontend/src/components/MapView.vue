@@ -6,6 +6,7 @@ import { useTrackStore } from '@/store/trackStore'
 import { renderTrack } from '@/utils/renderTrack'
 import { clearPointMarkers, hidePointMarker, getPointUI } from '@/utils/markers'
 import { enableInsertPointMode, disableInsertPointMode } from '@/utils/insertPoint'
+import { findPointLocation } from '@/utils/findPointLocation'
 import PointContextMenu from '@/components/PointContextMenu.vue'
 
 
@@ -98,20 +99,6 @@ function onUpdateRadius(value: number) {
             ui.influenceRadius = value
         }
     }
-}
-
-function findPointLocation(point: any) {
-    const track = store.track
-    if (!track) return null
-
-    for (const segment of track.segments) {
-        const index = segment.points.indexOf(point)
-        if (index !== -1) {
-            return { segment, index }
-        }
-    }
-
-    return null
 }
 
 function toHHMMSS(date: Date): string {
