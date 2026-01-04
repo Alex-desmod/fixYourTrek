@@ -22,7 +22,7 @@ function onGlobalClick(e: MouseEvent) {
 
     const menuEl = document.querySelector('.context-menu')
     if (menuEl && menuEl.contains(e.target as Node)) {
-        return // клик внутри меню — не закрываем
+        return
     }
 
     closeContextMenu()
@@ -67,6 +67,7 @@ function openContextMenu(point: any, e: MouseEvent) {
         x: e.clientX,
         y: e.clientY
     }
+    const ui = getPointUI(point)
     contextRadius.value = getPointUI(point)?.influenceRadius ?? 50
 }
 
@@ -82,8 +83,73 @@ function onKeyDown(e: KeyboardEvent) {
 }
 
 function onDeleteMarker() {
-    if (!contextPoint.value || !map) return
-    hidePointMarker(map, contextPoint.value)
+    if (!contextPoint.value || !map.value) return
+
+    hidePointMarker(map.value, contextPoint.value)
+    closeContextMenu()
+}
+
+function onUpdateRadius(value: number) {
+    contextRadius.value = value
+
+    if (contextPoint.value) {
+        const ui = getPointUI(contextPoint.value)
+        if (ui) {
+            ui.influenceRadius = value
+        }
+    }
+}
+
+function findPointLocation(point: any) {
+    const track = store.track
+    if (!track) return null
+
+    for (const segment of track.segments) {
+        const index = segment.points.indexOf(point)
+        if (index !== -1) {
+            return { segment, index }
+        }
+    }
+
+    return null
+}
+
+function toHHMMSS(date: Date): string {
+    return [
+        date.getHours().toString().padStart(2, '0'),
+        date.getMinutes().toString().padStart(2, '0'),
+        date.getSeconds().toString().padStart(2, '0')
+    ].join(':')
+}
+
+function getTimeLimits(point: any) {
+    const loc = findPointLocation(point)
+    if (!loc) return {}
+
+    const { segment, index } = loc
+    const limits: any = {}
+
+    if (index > 0) {
+        limits.min = toHHMMSS(new Date(segment.points[index - 1].time))
+    }
+
+    if (index < segment.points.length - 1) {
+        limits.max = toHHMMSS(new Date(segment.points[index + 1].time))
+    }
+
+    return limits
+}
+
+function getPointTime(point: any): string | null {
+    if (!point?.time) return null
+
+    const d = new Date(point.time)
+
+    const hh = d.getHours().toString().padStart(2, '0')
+    const mm = d.getMinutes().toString().padStart(2, '0')
+    const ss = d.getSeconds().toString().padStart(2, '0')
+
+    return `${hh}:${mm}:${ss}`
 }
 
 watch(
@@ -124,7 +190,9 @@ watch(
         :point="contextPoint"
         :position="contextPos"
         :influence-radius="contextRadius"
-        @update-radius="(v) => getPointUI(contextPoint)!.influenceRadius = v"
+        :current-time="getPointTime(contextPoint)"
+        :time-limits="getTimeLimits(contextPoint)"
+        @update-radius="onUpdateRadius"
         @delete="onDeleteMarker"
         @close="closeContextMenu"
     />

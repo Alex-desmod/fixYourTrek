@@ -7,34 +7,53 @@ const props = defineProps<{
     point: any | null
     position: { x: number; y: number } | null
     influenceRadius: number
-    minTime?: string
-    maxTime?: string
+    currentTime: string | null
+    timeLimits: {
+        min: string | null
+        max: string | null
+    }
 }>()
 
 const emit = defineEmits<{
     (e: 'close'): void
     (e: 'update-radius', value: number): void
+    (e: 'update-time', v: string): void
     (e: 'delete'): void
 }>()
 
 const store = useTrackStore()
 const radius = ref(props.influenceRadius)
-const newTime = ref('')
+const newTime = ref(props.currentTime)
 
 watch(radius, v => emit('update-radius', v))
 
 async function applyTime() {
     if (!props.point || !newTime.value) return
 
-    await updateTime({
+    const base = new Date(props.point.time)
+    const [h, m, s] = newTime.value.split(':').map(Number)
+
+    base.setHours(h, m, s ?? 0, 0)
+
+    const res = await updateTime({
         session_id: store.sessionId!,
         segment_idx: props.point.segment_idx,
         point_idx: props.point.point_idx,
-        new_time: newTime.value
+        new_time: base.toISOString()
     })
 
+    store.track = res.track
     emit('close')
 }
+
+watch(
+    () => props.point,
+    () => {
+        newTime.value = props.currentTime
+        radius.value = props.influenceRadius
+    },
+    { immediate: true }
+)
 
 function onDelete() {
     emit('delete')
@@ -50,16 +69,22 @@ function onDelete() {
     >
         <label>
             Influence radius: {{ radius }} m
-            <input type="range" min="20" max="200" v-model="radius" />
+            <input
+                type="range"
+                min="20"
+                max="200"
+                v-model.number="radius"
+            />
         </label>
 
         <label>
             Update time
             <input
-                type="datetime-local"
+                type="time"
+                step="1"
                 v-model="newTime"
-                :min="minTime"
-                :max="maxTime"
+                :min="timeLimits.min"
+                :max="timeLimits.max"
             />
         </label>
 
@@ -70,10 +95,16 @@ function onDelete() {
 
 <style scoped>
 .context-menu {
-  position: fixed;
-  z-index: 5000;
-  background: white;
-  border: 1px solid #ccc;
-  pointer-events: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    position: fixed;
+    z-index: 5000;
+    background: white;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
 }
+
 </style>
