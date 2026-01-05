@@ -1,12 +1,22 @@
 import L from 'leaflet'
 import { pointIcon, startIcon, finishIcon } from './icons'
 
-const pointMarkers = new WeakMap<any, L.Marker>()
-const allPointMarkers = new Set<L.Marker>()
-// UI state per point
-const pointUI = new WeakMap<any, { influenceRadius: number }>()
-// points whose marker is hidden by user
-const hiddenPoints = new WeakSet<any>()
+type Point = {
+    id: string
+    lat: number
+    lon: number
+}
+
+/* ---------- STORAGE ---------- */
+
+// point.id -> marker
+const pointMarkers = new Map<string, L.Marker>()
+
+// UI state per point.id
+const pointUI = new Map<string, { influenceRadius: number }>()
+
+// hidden point ids
+const hiddenPoints = new Set<string>()
 
 let startMarker: L.Marker | null = null
 let finishMarker: L.Marker | null = null
@@ -15,16 +25,23 @@ let finishMarker: L.Marker | null = null
 
 export function renderPointMarker(
     map: L.Map,
-    point: any,
-    onContextMenu?: (point: any, e: MouseEvent) => void
+    point: Point,
+    onContextMenu?: (point: Point, e: MouseEvent) => void
 ) {
-    if (hiddenPoints.has(point)) return
+    const id = point.id
+    if (!id) {
+        console.warn('Point without id', point)
+        return
+    }
 
-    let marker = pointMarkers.get(point)
+    if (hiddenPoints.has(id)) return
+
+    let marker = pointMarkers.get(id)
 
     if (!marker) {
-        if (!pointUI.has(point)) {
-        pointUI.set(point, { influenceRadius: 50 })
+        // init UI state
+        if (!pointUI.has(id)) {
+            pointUI.set(id, { influenceRadius: 50 })
         }
 
         marker = L.marker([point.lat, point.lon], {
@@ -32,6 +49,7 @@ export function renderPointMarker(
             draggable: true
         }).addTo(map)
 
+        // store callback on marker instance
         ;(marker as any)._onContextMenu = onContextMenu
 
         marker.on('contextmenu', (e) => {
@@ -46,13 +64,13 @@ export function renderPointMarker(
 
         marker.on('dragend', (e) => {
             const { lat, lng } = e.target.getLatLng()
-            // TODO reroute API
-            console.log('drag point', lat, lng)
+            // TODO: call reroute API
+            console.log('drag point', id, lat, lng)
         })
 
-        pointMarkers.set(point, marker)
-        allPointMarkers.add(marker)
+        pointMarkers.set(id, marker)
     } else {
+        // update position
         marker.setLatLng([point.lat, point.lon])
         ;(marker as any)._onContextMenu = onContextMenu
     }
@@ -60,26 +78,32 @@ export function renderPointMarker(
     return marker
 }
 
-export function hidePointMarker(map: L.Map, point: any) {
-    const marker = pointMarkers.get(point)
+export function hidePointMarker(map: L.Map, point: Point) {
+    const id = point.id
+    const marker = pointMarkers.get(id)
     if (!marker) return
 
     map.removeLayer(marker)
-    allPointMarkers.delete(marker)
-    pointMarkers.delete(point)
-    pointUI.delete(point)
-    hiddenPoints.add(point)
+    pointMarkers.delete(id)
+    pointUI.delete(id)
+    hiddenPoints.add(id)
 }
 
-export function getPointUI(point: any) {
-    return pointUI.get(point)
+export function getPointUI(point: Point) {
+    const id = point.id
+    if (!pointUI.has(id)) {
+        pointUI.set(id, { influenceRadius: 50 })
+    }
+    return pointUI.get(id)!
 }
 
 export function clearPointMarkers(map: L.Map) {
-    for (const marker of allPointMarkers) {
+    for (const marker of pointMarkers.values()) {
         map.removeLayer(marker)
     }
-    allPointMarkers.clear()
+    pointMarkers.clear()
+    pointUI.clear()
+    hiddenPoints.clear()
 }
 
 /* ---------- START / FINISH ---------- */

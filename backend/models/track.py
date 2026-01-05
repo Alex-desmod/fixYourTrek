@@ -1,3 +1,4 @@
+import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Literal, TypedDict
@@ -12,9 +13,12 @@ class TrackPoint:
     cadence: int | None = None
     hr: int | None = None
     power: int | None = None
+    # editor-only
+    id: str = field(default_factory=lambda: uuid.uuid4().hex, repr=False)
 
     def to_dict(self):
         return {
+            "id": self.id,
             "lat": self.lat,
             "lon": self.lon,
             "ele": self.ele,

@@ -8,26 +8,26 @@ type Menu = 'file' | 'edit' | null
 const openMenu = ref<Menu>(null)
 
 function toggle(menu: Menu) {
-  openMenu.value = openMenu.value === menu ? null : menu
+    openMenu.value = openMenu.value === menu ? null : menu
 }
 
 function close() {
-  openMenu.value = null
+    openMenu.value = null
 }
 
 function onClickOutside(e: MouseEvent) {
-  const target = e.target as HTMLElement
-  if (!target.closest('#top-menu')) {
-    close()
-  }
+    const target = e.target as HTMLElement
+    if (!target.closest('#top-menu')) {
+        close()
+    }
 }
 
 onMounted(() => {
-  document.addEventListener('click', onClickOutside)
+    document.addEventListener('click', onClickOutside)
 })
 
 onBeforeUnmount(() => {
-  document.removeEventListener('click', onClickOutside)
+    document.removeEventListener('click', onClickOutside)
 })
 
 const store = useTrackStore()
@@ -35,59 +35,59 @@ const fileInput = ref<HTMLInputElement | null>(null)
 
 /* File → Open… */
 function onOpenClick() {
-  fileInput.value?.click()
+    fileInput.value?.click()
 }
 
 /* choose a file */
 async function onFileSelected(e: Event) {
-  const input = e.target as HTMLInputElement
-  if (!input.files || input.files.length === 0) return
+    const input = e.target as HTMLInputElement
+    if (!input.files || input.files.length === 0) return
 
-  try {
-    const result = await uploadTrack(input.files[0])
-    store.setSession(result.session_id, result.track, 'upload')
-  } catch (err) {
-    console.error('Upload failed', err)
-    alert('Failed to upload track')
-  } finally {
-    input.value = '' // to upload the same file once again
-    close()
-  }
+    try {
+        const result = await uploadTrack(input.files[0])
+        store.setSession(result.session_id, result.track, 'upload')
+    } catch (err) {
+        console.error('Upload failed', err)
+        alert('Failed to upload track')
+    } finally {
+        input.value = '' // to upload the same file once again
+        close()
+    }
 }
 
 async function onUndo() {
-  if (!store.sessionId) return
+    if (!store.sessionId) return
 
-  try {
-    const res = await undo(store.sessionId)
-    store.setTrack(res.track, 'undo')
-  } catch (e) {
-    console.error('Undo failed', e)
-  }
+    try {
+        const res = await undo(store.sessionId)
+        store.setTrack(res.track, 'undo')
+    } catch (e) {
+        console.error('Undo failed', e)
+    }
 }
 
 async function onRedo() {
-  if (!store.sessionId) return
+    if (!store.sessionId) return
 
-  try {
-    const res = await redo(store.sessionId)
-    store.setTrack(res.track, 'redo')
-  } catch (e) {
-    console.error('Redo failed', e)
-  }
+    try {
+        const res = await redo(store.sessionId)
+        store.setTrack(res.track, 'redo')
+    } catch (e) {
+        console.error('Redo failed', e)
+    }
 }
 
 async function onReset() {
-  if (!store.sessionId) return
+    if (!store.sessionId) return
 
-  if (!confirm('Reset all changes?')) return
+    if (!confirm('Reset all changes?')) return
 
-  try {
-    const res = await reset(store.sessionId)
-    store.setTrack(res.track, 'reset')
-  } catch (e) {
-    console.error('Reset failed', e)
-  }
+    try {
+        const res = await reset(store.sessionId)
+        store.setTrack(res.track, 'reset')
+    } catch (e) {
+        console.error('Reset failed', e)
+    }
 }
 </script>
 
