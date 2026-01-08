@@ -15,9 +15,6 @@ const pointMarkers = new Map<string, L.Marker>()
 // UI state per point.id
 const pointUI = new Map<string, { influenceRadius: number }>()
 
-// hidden point ids
-const hiddenPoints = new Set<string>()
-
 let startMarker: L.Marker | null = null
 let finishMarker: L.Marker | null = null
 
@@ -33,8 +30,6 @@ export function renderPointMarker(
         console.warn('Point without id', point)
         return
     }
-
-    if (hiddenPoints.has(id)) return
 
     let marker = pointMarkers.get(id)
 
@@ -78,7 +73,7 @@ export function renderPointMarker(
     return marker
 }
 
-export function hidePointMarker(map: L.Map, point: Point) {
+export function deletePointMarker(map: L.Map, point: Point) {
     const id = point.id
     const marker = pointMarkers.get(id)
     if (!marker) return
@@ -86,7 +81,6 @@ export function hidePointMarker(map: L.Map, point: Point) {
     map.removeLayer(marker)
     pointMarkers.delete(id)
     pointUI.delete(id)
-    hiddenPoints.add(id)
 }
 
 export function getPointUI(point: Point) {
@@ -103,7 +97,6 @@ export function clearPointMarkers(map: L.Map) {
     }
     pointMarkers.clear()
     pointUI.clear()
-    hiddenPoints.clear()
 }
 
 /* ---------- START / FINISH ---------- */

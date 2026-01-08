@@ -4,7 +4,7 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useTrackStore } from '@/store/trackStore'
 import { renderTrack } from '@/utils/renderTrack'
-import { clearPointMarkers, hidePointMarker, getPointUI } from '@/utils/markers'
+import { clearPointMarkers, deletePointMarker, getPointUI } from '@/utils/markers'
 import { enableInsertPointMode, disableInsertPointMode } from '@/utils/insertPoint'
 import { findPointLocation } from '@/utils/findPointLocation'
 import PointContextMenu from '@/components/PointContextMenu.vue'
@@ -86,7 +86,7 @@ function onKeyDown(e: KeyboardEvent) {
 function onDeleteMarker() {
     if (!contextPoint.value || !map.value) return
 
-    hidePointMarker(map.value, contextPoint.value)
+    deletePointMarker(map.value, contextPoint.value)
     closeContextMenu()
 }
 
@@ -145,6 +145,7 @@ watch(
         if (!track || !map.value) return
         if (store.lastUpdate === 'reset') {
             clearPointMarkers(map.value)
+            store.lastUpdate = null
         }
         renderTrack(map.value, track)
     },
