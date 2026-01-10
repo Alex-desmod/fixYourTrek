@@ -110,7 +110,8 @@ function toHHMMSS(date: Date): string {
 }
 
 function getTimeLimits(point: any) {
-    const loc = findPointLocation(point)
+    if (!store.track || !point) return {}
+    const loc = findPointLocation(store.track, point)
     if (!loc) return {}
 
     const { segment, index } = loc
@@ -123,7 +124,6 @@ function getTimeLimits(point: any) {
     if (index < segment.points.length - 1) {
         limits.max = toHHMMSS(new Date(segment.points[index + 1].time))
     }
-
     return limits
 }
 

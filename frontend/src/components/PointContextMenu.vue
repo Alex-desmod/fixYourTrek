@@ -10,8 +10,8 @@ const props = defineProps<{
     influenceRadius: number
     currentTime: string | null
     timeLimits: {
-        min: string | null
-        max: string | null
+        min?: string
+        max?: string
     }
 }>()
 
@@ -24,7 +24,7 @@ const emit = defineEmits<{
 
 const store = useTrackStore()
 const radius = ref(props.influenceRadius)
-const newTime = ref(props.currentTime)
+const newTime = ref(props.currentTime ?? '')
 
 const isTimeValid = computed(() => {
     if (!newTime.value) return false
@@ -76,7 +76,7 @@ async function applyTime() {
 watch(
     () => props.point,
     () => {
-        newTime.value = props.currentTime
+        newTime.value = props.currentTime ?? ''
         radius.value = props.influenceRadius
     },
     { immediate: true }
@@ -94,41 +94,35 @@ function onDelete() {
         :style="{ left: position!.x + 'px', top: position!.y + 'px' }"
         @mousedown.stop
     >
-        <div class="time-block">
-            <div class="limits">
-                <span v-if="timeLimits.min">{{ timeLimits.min }}</span>
-                    –
-                <span v-if="timeLimits.max">{{ timeLimits.max }}</span>
+        <label class="field">
+            <span>Influence radius: {{ radius }} m</span>
+            <input type="range" min="20" max="200" v-model.number="radius" />
+        </label>
+
+        <label class="field">
+            <span>Update time</span>
+            <div class="limits" v-if="timeLimits.min || timeLimits.max">
+                Allowed range:
+                <span>{{ timeLimits.min ?? '—' }}</span>
+                –
+                <span>{{ timeLimits.max ?? '—' }}</span>
             </div>
-            <label>
-                Influence radius: {{ radius }} m
-                <input
-                    type="range"
-                    min="20"
-                    max="200"
-                    v-model.number="radius"
-                />
-            </label>
+            <input
+                type="time"
+                step="1"
+                v-model="newTime"
+                :min="timeLimits.min"
+                :max="timeLimits.max"
+            />
+        </label>
 
-            <label>
-                Update time
-                <input
-                    type="time"
-                    step="1"
-                    v-model="newTime"
-                    :min="timeLimits.min"
-                    :max="timeLimits.max"
-                />
-            </label>
-
-            <button
-                :disabled="!isTimeValid || !isChanged"
-                @click="applyTime"
-            >
-                Apply time
-            </button>
-            <button class="danger" @click="onDelete">Delete</button>
-        </div>
+        <button
+            :disabled="!isTimeValid || !isChanged"
+            @click="applyTime"
+        >
+            Apply time
+        </button>
+        <button class="danger" @click="onDelete">Delete</button>
     </div>
 </template>
 
@@ -144,6 +138,12 @@ function onDelete() {
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 6px;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
 </style>

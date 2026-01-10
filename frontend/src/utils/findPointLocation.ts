@@ -1,13 +1,22 @@
 export function findPointLocation(track: any, point: any) {
-    if (!track || !track.segments) return null
+    if (!track?.segments || !point?.id) {
+        console.warn('invalid args', { track, point })
+        return null
+    }
 
     for (let s = 0; s < track.segments.length; s++) {
         const segment = track.segments[s]
-        if (!segment?.points) continue
+        const points = segment.points
 
-        const idx = segment.points.indexOf(point)
-        if (idx !== -1) {
-            return { segment_idx: s, point_idx: idx }
+        for (let i = 0; i < points.length; i++) {
+            if (points[i].id === point.id) {
+                return {
+                    segment,
+                    segment_idx: s,
+                    index: i,
+                    point_idx: i
+                }
+            }
         }
     }
 
