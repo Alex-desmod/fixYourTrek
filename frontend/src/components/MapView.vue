@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, ref, watch } from 'vue'
+import { onMounted, onBeforeUnmount, ref, watch, computed } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useTrackStore } from '@/store/trackStore'
 import { renderTrack } from '@/utils/renderTrack'
 import { clearPointMarkers, deletePointMarker, getPointUI } from '@/utils/markers'
 import { enableInsertPointMode, disableInsertPointMode } from '@/utils/insertPoint'
-import { findPointLocation } from '@/utils/findPointLocation'
+import { findPointLocation, findPointById } from '@/utils/findPointLocation'
 import PointContextMenu from '@/components/PointContextMenu.vue'
 
 
@@ -14,12 +14,18 @@ const mapEl = ref<HTMLDivElement | null>(null)
 const map = ref<L.Map | null>(null)
 const store = useTrackStore()
 
-const contextPoint = ref<any | null>(null)
+const contextPointId = ref<number | null>(null)
+
+const contextPoint = computed(() => {
+    if (!store.track || contextPointId.value == null) return null
+    return findPointById(store.track, contextPointId.value)
+})
+
 const contextPos = ref<{ x: number; y: number } | null>(null)
 const contextRadius = ref(50)
 
 function onGlobalClick(e: MouseEvent) {
-    if (!contextPoint.value) return
+    if (contextPointId.value == null) return
 
     const menuEl = document.querySelector('.context-menu')
     if (menuEl && menuEl.contains(e.target as Node)) {
@@ -63,17 +69,18 @@ onBeforeUnmount(() => {
 })
 
 function openContextMenu(point: any, e: MouseEvent) {
-    contextPoint.value = point
+    contextPointId.value = point.id
     contextPos.value = {
         x: e.clientX,
         y: e.clientY
     }
-    const ui = getPointUI(point)
-    contextRadius.value = getPointUI(point)?.influenceRadius ?? 50
+
+    const ui = getPointUI(point.id)
+    contextRadius.value = ui?.influenceRadius ?? 50
 }
 
 function closeContextMenu() {
-    contextPoint.value = null
+    contextPointId.value = null
     contextPos.value = null
 }
 
@@ -84,17 +91,17 @@ function onKeyDown(e: KeyboardEvent) {
 }
 
 function onDeleteMarker() {
-    if (!contextPoint.value || !map.value) return
+    if (!map.value || contextPointId.value == null) return
 
-    deletePointMarker(map.value, contextPoint.value)
+    deletePointMarker(map.value, contextPointId.value)
     closeContextMenu()
 }
 
 function onUpdateRadius(value: number) {
     contextRadius.value = value
 
-    if (contextPoint.value) {
-        const ui = getPointUI(contextPoint.value)
+    if (contextPointId.value != null) {
+        const ui = getPointUI(contextPointId.value)
         if (ui) {
             ui.influenceRadius = value
         }
