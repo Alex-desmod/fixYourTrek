@@ -1,5 +1,8 @@
 import L from 'leaflet'
 import { pointIcon, startIcon, finishIcon } from './icons'
+import { reroute } from '@/api/trackApi'
+import { useTrackStore } from '@/store/trackStore'
+import { findPointLocation } from '@/utils/findPointLocation'
 
 type Point = {
     id: string
@@ -57,10 +60,38 @@ export function renderPointMarker(
             }
         })
 
-        marker.on('dragend', (e) => {
+        marker.on('dragend', async (e) => {
+            const store = useTrackStore()
+
+            if (!store.insertMode) return
+            if (!store.track || !store.sessionId) return
+
             const { lat, lng } = e.target.getLatLng()
-            // TODO: call reroute API
-            console.log('drag point', id, lat, lng)
+
+            const loc = findPointLocation(store.track, point)
+            if (!loc) {
+                console.warn('reroute: point not found in track')
+                return
+            }
+
+            const ui = getPointUI(point.id)
+            const radius = ui?.influenceRadius ?? 50
+
+            try {
+                const res = await reroute({
+                    session_id: store.sessionId,
+                    segment_idx: loc.segment_idx,
+                    point_idx: loc.point_idx,
+                    new_lat: lat,
+                    new_lon: lng,
+                    radius_m: radius
+                })
+
+                store.track = res.track
+                store.lastUpdate = 'reroute'
+            } catch (err) {
+                console.error('reroute failed', err)
+            }
         })
 
         pointMarkers.set(id, marker)
@@ -73,14 +104,13 @@ export function renderPointMarker(
     return marker
 }
 
-export function deletePointMarker(map: L.Map, point: Point) {
-    const id = point.id
-    const marker = pointMarkers.get(id)
+export function deletePointMarker(map: L.Map, pointId: number) {
+    const marker = pointMarkers.get(pointId)
     if (!marker) return
 
     map.removeLayer(marker)
-    pointMarkers.delete(id)
-    pointUI.delete(id)
+    pointMarkers.delete(pointId)
+    pointUI.delete(pointId)
 }
 
 export function getPointUI(point: Point) {
@@ -97,6 +127,29 @@ export function clearPointMarkers(map: L.Map) {
     }
     pointMarkers.clear()
     pointUI.clear()
+}
+
+export function syncPointMarkers(
+    map: L.Map,
+    track: any
+) {
+    // all point ids of the track
+    const aliveIds = new Set<number>()
+
+    for (const segment of track.segments) {
+        for (const p of segment.points) {
+            aliveIds.add(p.id)
+        }
+    }
+
+    // deleting the markers which doesn't have a track point anymore
+    for (const [id, marker] of pointMarkers.entries()) {
+        if (!aliveIds.has(id)) {
+            map.removeLayer(marker)
+            pointMarkers.delete(id)
+            pointUI.delete(id)
+        }
+    }
 }
 
 /* ---------- START / FINISH ---------- */

@@ -63,3 +63,27 @@ export async function updateTime(payload: {
 
     return await res.json()
 }
+
+export async function reroute(payload: {
+    session_id: string
+    segment_idx: number
+    point_idx: number
+    new_lat: number
+    new_lon: number
+    radius_m: number
+}) {
+    const res = await fetch('/api/track/reroute', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+    })
+
+    if (!res.ok) {
+        const text = await res.text()
+        throw new Error(`reroute failed: ${res.status} ${text}`)
+    }
+
+    return await res.json()
+}

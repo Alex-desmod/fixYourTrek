@@ -4,7 +4,7 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useTrackStore } from '@/store/trackStore'
 import { renderTrack } from '@/utils/renderTrack'
-import { clearPointMarkers, deletePointMarker, getPointUI } from '@/utils/markers'
+import { clearPointMarkers, deletePointMarker, syncPointMarkers, getPointUI } from '@/utils/markers'
 import { enableInsertPointMode, disableInsertPointMode } from '@/utils/insertPoint'
 import { findPointLocation, findPointById } from '@/utils/findPointLocation'
 import PointContextMenu from '@/components/PointContextMenu.vue'
@@ -150,6 +150,7 @@ watch(
     () => store.track,
     (track) => {
         if (!track || !map.value) return
+        syncPointMarkers(map.value, track)
         if (store.lastUpdate === 'reset') {
             clearPointMarkers(map.value)
             store.lastUpdate = null
