@@ -104,7 +104,7 @@ async def merge_track(session_id: str, file: UploadFile = File(...)):
     return {"track": session.current_track.to_dict()}
 
 @router.get("/export")
-async def export(session_id: str, fmt: Literal["gpx", "fit", "tcx"], name: str):
+async def export(session_id: str, name: str, fmt: Literal["gpx", "fit", "tcx"]="gpx"):
     """
     exports the current session track
     """

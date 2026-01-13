@@ -87,3 +87,24 @@ export async function reroute(payload: {
 
     return await res.json()
 }
+
+export async function exportTrack(payload: {
+    session_id: string
+    name: string
+    fmt: 'gpx' | 'fit' | 'tcx'
+}) {
+    const res = await fetch('/api/track/export', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+    })
+
+    if (!res.ok) {
+        const text = await res.text()
+        throw new Error(`export failed: ${res.status} ${text}`)
+    }
+
+    return await res.blob()
+}

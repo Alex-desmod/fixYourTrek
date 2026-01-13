@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 export type TrackUpdateReason =
     | 'upload'
     | 'add_point'
-    | 'move_point'
+    | 'reroute'
     | 'undo'
     | 'redo'
     | 'reset'

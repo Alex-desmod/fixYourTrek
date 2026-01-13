@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { uploadTrack } from '@/api/trackApi'
+import { uploadTrack, exportTrack } from '@/api/trackApi'
 import { undo, redo, reset } from '@/api/historyApi'
 import { useTrackStore } from '@/store/trackStore'
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 
 type Menu = 'file' | 'edit' | null
 const openMenu = ref<Menu>(null)
@@ -32,6 +32,8 @@ onBeforeUnmount(() => {
 
 const store = useTrackStore()
 const fileInput = ref<HTMLInputElement | null>(null)
+
+
 
 /* File → Open… */
 function onOpenClick() {

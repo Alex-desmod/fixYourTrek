@@ -14,6 +14,8 @@ const mapEl = ref<HTMLDivElement | null>(null)
 const map = ref<L.Map | null>(null)
 const store = useTrackStore()
 
+const spacePressed = ref(false)
+
 const contextPointId = ref<number | null>(null)
 
 const contextPoint = computed(() => {
@@ -60,12 +62,15 @@ onMounted(() => {
     }).addTo(map.value)
 
     document.addEventListener('mousedown', onGlobalClick)
-    document.removeEventListener('keydown', onKeyDown)
+    document.addEventListener('keydown', onKeyDown)
+    document.addEventListener('keyup', onKeyUp)
+
 })
 
 onBeforeUnmount(() => {
     document.removeEventListener('mousedown', onGlobalClick)
     document.removeEventListener('keydown', onKeyDown)
+    document.removeEventListener('keyup', onKeyUp)
 })
 
 function openContextMenu(point: any, e: MouseEvent) {
@@ -85,8 +90,26 @@ function closeContextMenu() {
 }
 
 function onKeyDown(e: KeyboardEvent) {
+    if (e.code === 'Space') {
+        e.preventDefault()
+        if (!spacePressed.value) {
+            spacePressed.value = true
+            disableInsertPointMode(map.value!)
+        }
+    }
+
     if (e.key === 'Escape') {
         closeContextMenu()
+    }
+}
+
+function onKeyUp(e: KeyboardEvent) {
+    if (e.code === 'Space') {
+        spacePressed.value = false
+
+        if (store.insertMode && map.value) {
+            enableInsertPointMode(map.value, openContextMenu)
+        }
     }
 }
 
@@ -166,8 +189,9 @@ watch(
         if (!map.value) return
         const container = map.value.getContainer()
         container.classList.toggle('insert-mode', enabled)
+        container.classList.toggle('insert-paused', spacePressed.value)
 
-        if (enabled) {
+        if (enabled && !spacePressed.value) {
             enableInsertPointMode(map.value, openContextMenu)
         } else {
             disableInsertPointMode(map.value)
@@ -202,4 +226,12 @@ watch(
     inset: 0;
     z-index: 0;
 }
+
+.map.insert-paused {
+    cursor: grab;
+}
+.map.insert-paused:active {
+    cursor: grabbing;
+}
+
 </style>
