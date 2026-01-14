@@ -15,19 +15,17 @@ def load_fit(content: bytes) -> Track:
             # ---- FILE_ID ----
             if frame.name == "file_id":
                 for f in frame.fields:
+                    print("file_id", f.name, f.value)
                     if f.name == "manufacturer":
                         metadata["manufacturer"] = f.value
-                    elif f.name == "product":
+                    elif f.name == "product_name":
                         metadata["product"] = f.value
-            # ---- SPORT ----
-            elif frame.name == "sport":
-                for f in frame.fields:
-                    if f.name == "sport":
-                        metadata["sport"] = f.value
             # ---- SESSION ----
             elif frame.name == "session":
                 for f in frame.fields:
-                    if f.name == "start_time":
+                    if f.name == "sport":
+                        metadata["sport"] = f.value
+                    elif f.name == "start_time":
                         metadata["start_time"] = f.value
                     elif f.name == "total_elapsed_time":
                         metadata["duration"] = float(f.value)
@@ -55,7 +53,7 @@ def load_fit(content: bytes) -> Track:
                             power=d.get("power"),
                         )
                     )
-
+    print(metadata)
     return Track(
         segments=[TrackSegment(points=seg_points)],
         metadata=metadata

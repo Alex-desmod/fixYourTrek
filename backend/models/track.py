@@ -42,7 +42,6 @@ class TrackMetadata(TypedDict, total=False):
     name: str | None
     sport: str | None
     description: str | None
-    sport: str | None
     start_time: datetime | None
     duration: float | None #seconds
     distance: float | None #meters
