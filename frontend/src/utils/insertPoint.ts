@@ -66,7 +66,7 @@ export function enableInsertPointMode(
                 *   point: newlyCreatedPoint
                 * }
             */
-
+            store.lastUpdate = 'add_point'
             store.track = res.track
             const newPoint = findPointInTrack(res.track, lat, lng)
             if (!newPoint) {

@@ -117,7 +117,6 @@ async def export(session_id: str, name: str, fmt: Literal["gpx", "fit", "tcx"]="
     data = content["data"]
     filename = f"{name}.{fmt}"
     media_type = content["media_type"]
-
     return Response(
         content=data,
         media_type=media_type,

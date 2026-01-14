@@ -33,7 +33,9 @@ onBeforeUnmount(() => {
 const store = useTrackStore()
 const fileInput = ref<HTMLInputElement | null>(null)
 
-
+const defaultName = computed(() => {
+    return store.track?.metadata?.name || 'track'
+})
 
 /* File → Open… */
 function onOpenClick() {
@@ -91,8 +93,38 @@ async function onReset() {
         console.error('Reset failed', e)
     }
 }
-</script>
 
+async function onExport() {
+    if (!store.sessionId) return
+
+    try {
+        const filename = `${defaultName.value}.gpx`
+
+        const blob = await exportTrack({
+            session_id: store.sessionId,
+            name: defaultName.value || 'track',
+            fmt: 'gpx'
+        })
+
+        const url = URL.createObjectURL(blob)
+
+        const a = document.createElement('a')
+        a.href = url
+        a.download = filename
+        a.style.display = 'none'
+
+        document.body.appendChild(a)
+        a.click()
+
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+    } catch (e) {
+        console.error(e)
+        alert('Export failed')
+    }
+}
+
+</script>
 
 <template>
     <div id="top-menu">
@@ -100,7 +132,13 @@ async function onReset() {
             <button class="top-menu-btn" @click.stop="toggle('file')">File</button>
             <div class="submenu" v-show="openMenu === 'file'">
                 <button class="submenu-btn" @click.stop="onOpenClick">Open…</button>
-                <button class="submenu-btn">Export…</button>
+                <button
+                    class="submenu-btn"
+                    :disabled="!store.track"
+                    @click="onExport"
+                >
+                    Export…
+                </button>
             </div>
         </div>
 

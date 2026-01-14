@@ -93,12 +93,14 @@ export async function exportTrack(payload: {
     name: string
     fmt: 'gpx' | 'fit' | 'tcx'
 }) {
-    const res = await fetch('/api/track/export', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
+    const params = new URLSearchParams({
+        session_id: payload.session_id,
+        name: payload.name,
+        fmt: payload.fmt
+    })
+
+    const res = await fetch(`/api/track/export?${params.toString()}`, {
+        method: 'GET'
     })
 
     if (!res.ok) {

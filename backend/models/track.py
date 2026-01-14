@@ -40,6 +40,7 @@ class TrackSegment:
 class TrackMetadata(TypedDict, total=False):
     format: Literal["gpx", "fit", "tcx"]
     name: str | None
+    sport: str | None
     description: str | None
     sport: str | None
     start_time: datetime | None

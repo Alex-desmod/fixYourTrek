@@ -178,7 +178,14 @@ watch(
             clearPointMarkers(map.value)
             store.lastUpdate = null
         }
-        renderTrack(map.value, track)
+        const preserveView =
+            store.lastUpdate === 'add_point' ||
+            store.lastUpdate === 'reroute' ||
+            store.lastUpdate === 'update_time' ||
+            store.lastUpdate === 'undo' ||
+            store.lastUpdate === 'redo'
+        renderTrack(map.value, track, { preserveView })
+        store.lastUpdate = null
     },
     { immediate: true }
 )

@@ -1,11 +1,24 @@
 import gpxpy
 from xml.etree.ElementTree import Element, SubElement
 
-from backend.models.track import Track, TrackSegment, TrackPoint
+from backend.models.track import Track, TrackSegment, TrackPoint, TrackMetadata
+
 
 def load_gpx(content: bytes) -> Track:
     gpx = gpxpy.parse(content.decode("utf-8"))
     segments = []
+
+    trk = gpx.tracks[0] if gpx.tracks else None
+
+    metadata: TrackMetadata = {
+        "format": "gpx",
+        "description": gpx.description,
+        "start_time": gpx.time
+    }
+
+    if trk:
+        metadata["name"] = trk.name
+        metadata["sport"] = trk.type
 
     for trk in gpx.tracks:
         for seg in trk.segments:
@@ -33,42 +46,55 @@ def load_gpx(content: bytes) -> Track:
 
     return Track(
         segments=segments,
-        metadata={
-            "format": "gpx",
-            "name": gpx.name,
-            "description": gpx.description,
-            "start_time": gpx.time
-        })
+        metadata=metadata)
 
-def _extract_gpx_extension(ext, key: str):
-    """Extracts extensions from GPX (cadence, heart rate, power)."""
-    if not ext:
+def _extract_gpx_extension(extensions, key: str):
+    """
+    Extracts a numeric value (hr, cad, power) from GPX extensions.
+    Supports gpxtpx:TrackPointExtension and similar namespaces.
+    """
+    if not extensions:
         return None
-    for item in ext:
-        if item.tag.lower().endswith(key):
-            try:
-                return int(item.text)
-            except (ValueError, TypeError):
-                return None
+
+    key = key.lower()
+
+    for ext in extensions:
+        # ext is usually <gpxtpx:TrackPointExtension>
+        for child in ext:
+            tag = child.tag.lower()
+
+            if tag.endswith(f":{key}") or tag.endswith(key):
+                try:
+                    return int(float(child.text))
+                except (ValueError, TypeError):
+                    return None
 
     return None
+
 
 def to_gpx(track: Track) -> str:
     gpx = gpxpy.gpx.GPX()
     md = track.metadata
 
     # ----- GPX metadata -----
-    if md.get("name"):
-        gpx.name = md["name"]
-    if md.get("description"):
-        gpx.description = md["description"]
     if md.get("start_time"):
         gpx.time = md["start_time"]
 
-    # ----- Track + Segments + Points -----
+    # ----- Track -----
     gpx_track = gpxpy.gpx.GPXTrack()
     gpx.tracks.append(gpx_track)
 
+    # Track-level metadata
+    if md.get("name"):
+        gpx_track.name = md["name"]
+
+    if md.get("sport"):
+        gpx_track.type = md["sport"]
+
+    if md.get("description"):
+        gpx_track.description = md["description"]
+
+    # ----- Segments + Points -----
     for seg in track.segments:
         gpx_segment = gpxpy.gpx.GPXTrackSegment()
         gpx_track.segments.append(gpx_segment)
@@ -80,6 +106,7 @@ def to_gpx(track: Track) -> str:
                 elevation=p.ele,
                 time=p.time
             )
+
             # ----- Extensions (hr, cad, power) -----
             if p.hr is not None or p.cadence is not None or p.power is not None:
                 ext_root = Element("gpxtpx:TrackPointExtension")
@@ -93,10 +120,9 @@ def to_gpx(track: Track) -> str:
                 if p.power is not None:
                     SubElement(ext_root, "gpxtpx:power").text = str(p.power)
 
-                # gpxpy requires a list of the XML elements
                 point.extensions.append(ext_root)
 
             gpx_segment.points.append(point)
 
-    # GPX → string
     return gpx.to_xml()
+
