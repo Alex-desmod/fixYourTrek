@@ -4,7 +4,8 @@ from fastapi import UploadFile, APIRouter, File, HTTPException
 from fastapi.responses import Response
 
 from backend.schemas.track_requests import (SessionRequest, RerouteRequest, TrimRequest,
-                                            InsertPointRequest, UpdateTimeRequest)
+                                            InsertPointRequest, UpdateTimeRequest, PreviewNormalizeRequest,
+                                            ApplyNormalizeRequest)
 from backend.services.track_loader import load_track, export_track
 from backend.services.track_session import TrackSessionManager
 
@@ -41,6 +42,24 @@ async def reset(req: SessionRequest):
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
     session.reset()
+    return {"track": session.current_track.to_dict()}
+
+@router.post("/normalize/preview")
+async def normalize_preview(req: PreviewNormalizeRequest):
+    session = session_manager.get(req.session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    stucks = session.detect_gps_stucks(max_speed=req.max_speed, min_points=req.min_points)
+    return {
+        "stucks": [s.__dict__ for s in stucks]
+    }
+
+@router.post("/normalize/apply")
+async def normalize_apply(req: ApplyNormalizeRequest):
+    session = session_manager.get(req.session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    session.normalize_gps_stucks(stucks=req.stucks)
     return {"track": session.current_track.to_dict()}
 
 @router.post("/add_point")

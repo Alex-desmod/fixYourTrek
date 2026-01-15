@@ -3,7 +3,7 @@ import uuid
 
 from datetime import timedelta, datetime
 from typing import List
-from haversine import haversine
+from haversine import haversine, Unit
 from backend.models.track import Track, TrackSegment, TrackPoint, GpsStuck
 
 
@@ -62,7 +62,6 @@ class TrackSession:
     def _route_via_osrm(self, start_point, new_lat, new_lon, end_point) -> List[TrackPoint]:
         pass
 
-
     # Editing methods
     def detect_gps_stucks(self, max_speed: float, min_points: int = 10) -> List[GpsStuck]:
         """Detects GPS stucks."""
@@ -72,7 +71,55 @@ class TrackSession:
             i = 1
             while i < len(pts) - 1:
                 start = i - 1
-                pts_in_stuck = 0
+                stuck_indices = []
+
+                while (
+                    i < len(pts)
+                    and haversine(
+                        (pts[start].lat, pts[start].lon),
+                        (pts[i].lat, pts[i].lon),
+                        unit=Unit.METERS
+                    ) <= 1
+                ):
+                    stuck_indices.append(i)
+                    i += 1
+
+                if (len(stuck_indices) >= min_points and i < len(pts)):
+                    jump_m = haversine(
+                        (pts[i-1].lat, pts[i-1].lon),
+                        (pts[i].lat, pts[i].lon),
+                        unit=Unit.METERS
+                    )
+                    dt = (pts[i].time - pts[i-1].time).total_seconds()
+                    speed = jump_m / dt
+                    if speed > max_speed:
+                        stucks.append(
+                            GpsStuck(
+                                segment_idx=seg_idx,
+                                start_idx=start,
+                                end_idx=i,
+                                jump_m=jump_m,
+                                stuck_indices=stuck_indices
+                            )
+                        )
+                else:
+                    i += 1
+        return stucks
+
+    def normalize_gps_stucks(self, stucks: list[GpsStuck]):
+        """Normalizes the detected GPS stucks by allocating points steadily on a problem part of the track."""
+        self._save_state()
+        for s in stucks:
+            segment = self.current_track.segments[s.segment_idx]
+            pts = segment.points
+            p0 = pts[s.start_idx]
+            p1 = pts[s.end_idx]
+            n = len(s.stuck_indices) + 1
+
+            for j, idx in enumerate(s.stuck_indices, start=1):
+                t = j / n
+                pts[idx].lat = _interp(p0.lat, p1.lat, t)
+                pts[idx].lon = _interp(p0.lon, p1.lon, t)
 
     def insert_point(self, segment_idx: int, prev_point_idx: int, lat: float, lon: float):
         """Adds a new point to the track"""
@@ -90,7 +137,7 @@ class TrackSession:
         # ========== CASE 1 — prepend ==========
         if prev_point_idx == -1:
             # distance to the first point
-            d = haversine((lat, lon), (segment.points[0].lat, segment.points[0].lon))
+            d = haversine((lat, lon), (segment.points[0].lat, segment.points[0].lon), unit=Unit.METERS)
 
             dt = d / speed
             new_time = segment.points[0].time - timedelta(seconds=dt)
@@ -109,7 +156,7 @@ class TrackSession:
         # ========== CASE 2 — append ===========
         elif prev_point_idx == len(segment.points)-1:
             # distance from the last point
-            d = haversine((segment.points[-1].lat, segment.points[-1].lon), (lat, lon))
+            d = haversine((segment.points[-1].lat, segment.points[-1].lon), (lat, lon), unit=Unit.METERS)
             dt = d / speed
             new_time = segment.points[-1].time + timedelta(seconds=dt)
             new_point = TrackPoint(
@@ -131,25 +178,20 @@ class TrackSession:
             d1 = haversine((lat, lon),
                            (segment.points[prev_point_idx+1].lat, segment.points[prev_point_idx+1].lon))
 
-            # interpolation
             t = d0 / (d0 + d1)
-            def interp(a, b):
-                return a + t * (b - a) if a is not None and b is not None else a or b
-
             dt = (segment.points[prev_point_idx+1].time - segment.points[prev_point_idx].time).total_seconds() * t
 
             new_point = TrackPoint(
                 lat=lat,
                 lon=lon,
                 time=segment.points[prev_point_idx].time + timedelta(seconds=dt),
-                ele=interp(segment.points[prev_point_idx].ele, segment.points[prev_point_idx+1].ele),
-                cadence=interp(segment.points[prev_point_idx].cadence, segment.points[prev_point_idx+1].cadence),
-                hr=interp(segment.points[prev_point_idx].hr, segment.points[prev_point_idx+1].hr),
-                power=interp(segment.points[prev_point_idx].power, segment.points[prev_point_idx+1].power)
+                ele=_interp(segment.points[prev_point_idx].ele, segment.points[prev_point_idx+1].ele, t),
+                cadence=_interp(segment.points[prev_point_idx].cadence, segment.points[prev_point_idx+1].cadence, t),
+                hr=_interp(segment.points[prev_point_idx].hr, segment.points[prev_point_idx+1].hr, t),
+                power=_interp(segment.points[prev_point_idx].power, segment.points[prev_point_idx+1].power, t)
             )
 
             segment.points.insert(prev_point_idx+1, new_point)
-
 
     def update_time(self, segment_idx: int, point_idx: int, new_time: datetime):
         """Updating the timestamp of a point."""
@@ -204,7 +246,6 @@ class TrackSession:
         # placement of the cental point
         center.lat = new_lat
         center.lon = new_lon
-
 
     def trim(self, start_idx: int, end_idx: int):
         """
@@ -269,3 +310,7 @@ class TrackSessionManager:
 
     def delete(self, session_id):
         return self.sessions.pop(session_id, None)
+
+# Linear interpolation
+def _interp(a, b, t):
+    return a + t * (b - a) if a is not None and b is not None else a or b

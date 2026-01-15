@@ -4,6 +4,15 @@ from pydantic import BaseModel
 class SessionRequest(BaseModel):
     session_id: str
 
+class PreviewNormalizeRequest(BaseModel):
+    session_id: str
+    max_speed: float
+    min_points: int
+
+class ApplyNormalizeRequest(BaseModel):
+    session_id: str
+    stucks: list
+
 class InsertPointRequest(BaseModel):
     session_id: str
     segment_idx: int
