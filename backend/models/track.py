@@ -64,6 +64,5 @@ class GpsStuck:
     segment_idx: int
     start_idx: int
     end_idx: int # index of the first normal point after a stuck
-    jump_m: float # in meters
     stuck_indices: list[int]
 

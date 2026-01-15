@@ -98,7 +98,6 @@ class TrackSession:
                                 segment_idx=seg_idx,
                                 start_idx=start,
                                 end_idx=i,
-                                jump_m=jump_m,
                                 stuck_indices=stuck_indices
                             )
                         )

@@ -3,6 +3,7 @@ from typing import Literal
 from fastapi import UploadFile, APIRouter, File, HTTPException
 from fastapi.responses import Response
 
+from backend.models.track import GpsStuck
 from backend.schemas.track_requests import (SessionRequest, RerouteRequest, TrimRequest,
                                             InsertPointRequest, UpdateTimeRequest, PreviewNormalizeRequest,
                                             ApplyNormalizeRequest)
@@ -59,7 +60,17 @@ async def normalize_apply(req: ApplyNormalizeRequest):
     session = session_manager.get(req.session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
-    session.normalize_gps_stucks(stucks=req.stucks)
+    stucks = [
+        GpsStuck(
+            segment_idx=s.segment_idx,
+            start_idx=s.start_idx,
+            end_idx=s.end_idx,
+            stuck_indices=s.stuck_indices
+        )
+        for s in req.stucks
+    ]
+
+    session.normalize_gps_stucks(stucks=stucks)
     return {"track": session.current_track.to_dict()}
 
 @router.post("/add_point")

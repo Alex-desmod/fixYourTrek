@@ -9,9 +9,15 @@ class PreviewNormalizeRequest(BaseModel):
     max_speed: float
     min_points: int
 
+class GpsStucksRequest(BaseModel):
+    segment_idx: int
+    start_idx: int
+    end_idx: int
+    stuck_indices: list[int]
+
 class ApplyNormalizeRequest(BaseModel):
     session_id: str
-    stucks: list
+    stucks: list[GpsStucksRequest]
 
 class InsertPointRequest(BaseModel):
     session_id: str
