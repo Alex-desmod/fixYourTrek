@@ -4,7 +4,7 @@ import uuid
 from datetime import timedelta, datetime
 from typing import List
 from haversine import haversine
-from backend.models.track import Track, TrackSegment, TrackPoint
+from backend.models.track import Track, TrackSegment, TrackPoint, GpsStuck
 
 
 class TrackSession:
@@ -64,6 +64,16 @@ class TrackSession:
 
 
     # Editing methods
+    def detect_gps_stucks(self, max_speed: float, min_points: int = 10) -> List[GpsStuck]:
+        """Detects GPS stucks."""
+        stucks = []
+        for seg_idx, segment in enumerate(self.current_track.segments):
+            pts = segment.points
+            i = 1
+            while i < len(pts) - 1:
+                start = i - 1
+                pts_in_stuck = 0
+
     def insert_point(self, segment_idx: int, prev_point_idx: int, lat: float, lon: float):
         """Adds a new point to the track"""
         self._save_state()
