@@ -19,6 +19,24 @@ export async function uploadTrack(file: File): Promise<UploadResponse> {
     return await res.json()
 }
 
+export async function normalizePreview(payload: {
+    session_id: string
+    max_speed: number
+    min_points: number
+}) {
+    const res = await fetch('/api/normalize/preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+
+    if (!res.ok) {
+        throw new Error(await res.text())
+    }
+
+    return await res.json()
+}
+
 export async function addPoint(payload: {
     session_id: string
     segment_idx: number

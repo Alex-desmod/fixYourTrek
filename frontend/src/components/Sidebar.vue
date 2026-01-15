@@ -2,18 +2,32 @@
 import { useTrackStore } from '@/store/trackStore'
 
 const store = useTrackStore()
-</script>
 
+function toggleNormalize() {
+    store.normalizeOpen = !store.normalizeOpen
+}
+</script>
 
 <template>
     <div id="sidebar">
         <button
             class="tool-btn"
-            :class="{ active: store.insertMode }"
-            @click="store.setInsertMode(!store.insertMode)"
+            :disabled="!store.track"
+            :class="{ active: store.editorMode === 'normalize' }"
+            @click="store.setEditorMode('normalize')"
+            title="Detect GPS stucks and normalize the track"
+        >
+            N
+        </button>
+
+        <button
+            class="tool-btn"
+            :disabled="!store.track"
+            :class="{ active: store.editorMode === 'insert' }"
+            @click="store.setEditorMode('insert')"
             title="Insert a point and edit the track"
         >
-        ✏️
+            ✏️
         </button>
     </div>
 </template>

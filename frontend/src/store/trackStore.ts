@@ -8,36 +8,90 @@ export type TrackUpdateReason =
     | 'redo'
     | 'reset'
 
+export type EditorMode = 'insert' | 'normalize' | null
+
 export const useTrackStore = defineStore('track', {
     state: () => ({
         sessionId: null as string | null,
         track: null as any,
-        insertMode: false,
+        editorMode: null as EditorMode,
+
+        /* ---------- NORMALIZE ---------- */
+        normalizeOpen: false,
+        normalizeParams: {
+            maxSpeed: 5,
+            minPoints: 10
+        },
+        normalizePreview: null as any | null,
+
+        /* ---------- UI ---------- */
         selectedPoint: null as any,
+
         lastUpdate: null as TrackUpdateReason | null
     }),
 
     actions: {
+        /* ---------- TRACK ---------- */
+
         setSession(sessionId: string, track: any, reason: TrackUpdateReason) {
             this.sessionId = sessionId
-            this.track = track,
+            this.track = track
             this.lastUpdate = reason
+            this.editorMode = null
+            this.syncNormalizeDefaults()
         },
 
         setTrack(track: any, reason: TrackUpdateReason) {
             this.track = track
             this.lastUpdate = reason
+            this.editorMode = null
+            this.syncNormalizeDefaults()
         },
 
         clear() {
             this.sessionId = null
-            this.track = null,
+            this.track = null
             this.lastUpdate = null
+            this.editorMode = null
+            this.normalizePreview = null
         },
 
-        setInsertMode(val: boolean) {
-            this.insertMode = val
+        /* ---------- MODES ---------- */
+
+        setEditorMode(mode: EditorMode) {
+            if (!this.track) return
+            this.editorMode = this.editorMode === mode ? null : mode
         },
+
+        disableEditorMode() {
+            this.editorMode = null
+        },
+
+        /* ---------- NORMALIZE ---------- */
+
+        syncNormalizeDefaults() {
+            if (!this.track?.metadata?.sport) return
+
+            this.normalizeParams.maxSpeed =
+            this.track.metadata.sport === 'cycling' ? 15 : 5
+        },
+
+        setNormalizeOpen(val: boolean) {
+            this.normalizeOpen = val
+        },
+
+        setNormalizeParams(patch: Partial<typeof this.normalizeParams>) {
+            this.normalizeParams = {
+                ...this.normalizeParams,
+                ...patch
+            }
+        },
+
+        setNormalizePreview(preview: any | null) {
+            this.normalizePreview = preview
+        },
+
+        /* ---------- UI ---------- */
 
         selectPoint(p: any) {
             this.selectedPoint = p

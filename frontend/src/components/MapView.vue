@@ -191,17 +191,24 @@ watch(
 )
 
 watch(
-    () => store.insertMode,
-    (enabled) => {
+    [() => store.editorMode, () => spacePressed.value],
+    ([mode, paused]) => {
         if (!map.value) return
-        const container = map.value.getContainer()
-        container.classList.toggle('insert-mode', enabled)
-        container.classList.toggle('insert-paused', spacePressed.value)
 
-        if (enabled && !spacePressed.value) {
-            enableInsertPointMode(map.value, openContextMenu)
-        } else {
-            disableInsertPointMode(map.value)
+        const container = map.value.getContainer()
+
+        disableInsertPointMode(map.value)
+        container.classList.remove('insert-mode')
+        container.classList.remove('insert-paused')
+
+        if (mode === 'insert') {
+            container.classList.add('insert-mode')
+
+            if (paused) {
+                container.classList.add('insert-paused')
+            } else {
+                enableInsertPointMode(map.value, openContextMenu)
+            }
         }
     },
     { immediate: true }
