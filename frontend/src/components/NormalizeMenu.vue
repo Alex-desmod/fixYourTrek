@@ -1,27 +1,43 @@
 <script setup lang="ts">
-import { watch } from 'vue'
+import { watch, onBeforeUnmount } from 'vue'
 import { useTrackStore } from '@/store/trackStore'
-import { normalizePreview, normalizeApply } from '@/api/normalizeApi'
+import { normalizePreview } from '@/api/trackApi'
 
 const store = useTrackStore()
 
-async function loadPreview() {
-    if (!store.sessionId) return
-
-    const res = await normalizePreview({
-        session_id: store.sessionId,
-        max_speed: store.normalizeParams.maxSpeed,
-        min_points: store.normalizeParams.minPoints
-    })
-
-    store.normalizePreview = res
-}
+let previewTimer: number | null = null
 
 watch(
     () => [store.normalizeParams.maxSpeed, store.normalizeParams.minPoints],
-    loadPreview,
-    { immediate: true }
+    () => {
+        if (!store.sessionId) return
+
+        if (previewTimer !== null) {
+            clearTimeout(previewTimer)
+        }
+
+        previewTimer = window.setTimeout(async () => {
+            try {
+                const res = await normalizePreview({
+                    session_id: store.sessionId!,
+                    max_speed: store.normalizeParams.maxSpeed,
+                    min_points: store.normalizeParams.minPoints
+                })
+
+                store.setNormalizePreview(res)
+            } catch (e) {
+                console.error('normalize preview failed', e)
+            }
+        }, 300) // delay 300ms
+    },
+    { deep: true }
 )
+
+    onBeforeUnmount(() => {
+            if (previewTimer !== null) {
+            clearTimeout(previewTimer)
+        }
+    })
 
 async function applyNormalize() {
     if (!store.sessionId) return

@@ -24,7 +24,7 @@ export async function normalizePreview(payload: {
     max_speed: number
     min_points: number
 }) {
-    const res = await fetch('/api/normalize/preview', {
+    const res = await fetch('/api/track/normalize/preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

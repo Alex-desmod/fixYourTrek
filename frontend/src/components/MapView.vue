@@ -7,8 +7,8 @@ import { renderTrack } from '@/utils/renderTrack'
 import { clearPointMarkers, deletePointMarker, syncPointMarkers, getPointUI } from '@/utils/markers'
 import { enableInsertPointMode, disableInsertPointMode } from '@/utils/insertPoint'
 import { findPointLocation, findPointById } from '@/utils/findPointLocation'
+import { renderNormalizePreview, clearNormalizePreview } from '@/utils/normalizePreview'
 import PointContextMenu from '@/components/PointContextMenu.vue'
-
 
 const mapEl = ref<HTMLDivElement | null>(null)
 const map = ref<L.Map | null>(null)
@@ -212,6 +212,20 @@ watch(
         }
     },
     { immediate: true }
+)
+
+watch(
+    () => store.normalizePreview,
+    (preview) => {
+        if (!map.value) return
+
+        if (!preview) {
+            clearNormalizePreview(map.value)
+            return
+        }
+
+        renderNormalizePreview(map.value, store.track, preview)
+    }
 )
 
 </script>
