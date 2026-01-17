@@ -68,7 +68,7 @@ async def normalize_apply(req: ApplyNormalizeRequest):
             end_idx=s.end_idx,
             stuck_indices=s.stuck_indices
         )
-        for s in req.stucks["stucks"]
+        for s in req.stucks
     ]
     session.normalize_gps_stucks(stucks=stucks)
     return {"track": session.current_track.to_dict()}
