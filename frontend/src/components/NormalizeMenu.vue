@@ -33,24 +33,12 @@ watch(
     { deep: true }
 )
 
-    onBeforeUnmount(() => {
-            if (previewTimer !== null) {
-            clearTimeout(previewTimer)
-        }
-    })
+onBeforeUnmount(() => {
+    if (previewTimer !== null) {
+        clearTimeout(previewTimer)
+    }
+})
 
-async function applyNormalize() {
-    if (!store.sessionId) return
-
-    const res = await normalizeApply({
-        session_id: store.sessionId,
-        max_speed: store.normalizeParams.maxSpeed,
-        min_points: store.normalizeParams.minPoints
-    })
-
-    store.track = res.track
-    store.normalizeOpen = false
-}
 </script>
 
 <template>
@@ -77,7 +65,11 @@ async function applyNormalize() {
             />
         </label>
 
-        <button class="primary" @click="applyNormalize">
+        <button
+            class="primary"
+            :disabled="!store.normalizePreview"
+            @click="store.applyNormalize()"
+        >
             Normalize
         </button>
     </div>

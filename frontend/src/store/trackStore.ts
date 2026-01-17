@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { normalizeApply } from '@/api/trackApi'
 
 export type TrackUpdateReason =
     | 'upload'
@@ -7,6 +8,7 @@ export type TrackUpdateReason =
     | 'undo'
     | 'redo'
     | 'reset'
+    | 'normalize'
 
 export type EditorMode = 'insert' | 'normalize' | null
 
@@ -89,6 +91,19 @@ export const useTrackStore = defineStore('track', {
 
         setNormalizePreview(preview: any | null) {
             this.normalizePreview = preview
+        },
+
+        async applyNormalize() {
+            if (!this.sessionId || !this.normalizePreview) return
+
+            const res = await normalizeApply({
+                session_id: this.sessionId,
+                stucks: this.normalizePreview.stucks
+            })
+
+            this.track = res.track
+            this.normalizePreview = null
+            this.lastUpdate = 'normalize'
         },
 
         /* ---------- UI ---------- */

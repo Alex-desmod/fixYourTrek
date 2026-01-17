@@ -37,6 +37,24 @@ export async function normalizePreview(payload: {
     return await res.json()
 }
 
+export async function normalizeApply(payload: {
+    session_id: string
+    stucks: any
+}) {
+    const res = await fetch('/api/track/normalize/apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+
+    if (!res.ok) {
+        const text = await res.text()
+        throw new Error(`normalization failed: ${res.status} ${text}`)
+    }
+
+    return await res.json()
+}
+
 export async function addPoint(payload: {
     session_id: string
     segment_idx: number
@@ -46,9 +64,7 @@ export async function addPoint(payload: {
 }) {
     const res = await fetch('/api/track/add_point', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
     })
 
@@ -68,9 +84,7 @@ export async function updateTime(payload: {
 }) {
     const res = await fetch('/api/track/update_time', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
     })
 
@@ -92,9 +106,7 @@ export async function reroute(payload: {
 }) {
     const res = await fetch('/api/track/reroute', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
     })
 

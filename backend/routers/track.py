@@ -60,6 +60,7 @@ async def normalize_apply(req: ApplyNormalizeRequest):
     session = session_manager.get(req.session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
+    print(req.stucks)
     stucks = [
         GpsStuck(
             segment_idx=s.segment_idx,
@@ -67,9 +68,8 @@ async def normalize_apply(req: ApplyNormalizeRequest):
             end_idx=s.end_idx,
             stuck_indices=s.stuck_indices
         )
-        for s in req.stucks
+        for s in req.stucks["stucks"]
     ]
-
     session.normalize_gps_stucks(stucks=stucks)
     return {"track": session.current_track.to_dict()}
 

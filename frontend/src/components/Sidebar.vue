@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useTrackStore } from '@/store/trackStore'
-
+import NormalizeMenu from '@/components/NormalizeMenu.vue'
 const store = useTrackStore()
 
 function toggleNormalize() {
@@ -10,15 +10,22 @@ function toggleNormalize() {
 
 <template>
     <div id="sidebar">
-        <button
-            class="tool-btn"
-            :disabled="!store.track"
-            :class="{ active: store.editorMode === 'normalize' }"
-            @click="store.setEditorMode('normalize')"
-            title="Detect GPS stucks and normalize the track"
-        >
-            N
-        </button>
+        <div class="tool-wrapper">
+            <button
+                class="tool-btn"
+                :disabled="!store.track"
+                :class="{ active: store.editorMode === 'normalize' }"
+                @click="store.setEditorMode('normalize')"
+                title="Detect GPS stucks and normalize the track"
+            >
+                N
+            </button>
+
+            <NormalizeMenu
+                v-if="store.editorMode === 'normalize'"
+                class="normalize-menu"
+            />
+        </div>
 
         <button
             class="tool-btn"
@@ -35,7 +42,7 @@ function toggleNormalize() {
 
 <style scoped>
 #sidebar {
-    position: absolute;
+    position: fixed;
     top: 50%;
     left: 10px;
     display: flex;
@@ -56,5 +63,16 @@ function toggleNormalize() {
 
 .tool-btn.active {
     background: #d1d1d1;
+}
+
+.tool-wrapper {
+    position: relative;
+}
+
+.normalize-menu {
+    position: absolute;
+    left: 48px;
+    top: 0;
+    z-index: 1000;
 }
 </style>
