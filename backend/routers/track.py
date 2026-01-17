@@ -60,7 +60,6 @@ async def normalize_apply(req: ApplyNormalizeRequest):
     session = session_manager.get(req.session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
-    print(req.stucks)
     stucks = [
         GpsStuck(
             segment_idx=s.segment_idx,
