@@ -230,10 +230,15 @@ class TrackSession:
         center = points[point_idx]
         old_lat, old_lon = center.lat, center.lon
 
+        # index bounds (+/- 100 indices)
+        start = max(0, point_idx - 100)
+        end = min(len(points), point_idx + 100)
+
         if mode == "straight":
-            for p in points:
+            for i in range(start, end):
+                p = points[i]
                 # distance to the dragged point (meters)
-                d = haversine((old_lat, old_lon),(p.lat, p.lon)) * 1000
+                d = haversine((old_lat, old_lon),(p.lat, p.lon), unit=Unit.METERS)
                 if d > radius_m:
                     continue  # outside the influence
 
