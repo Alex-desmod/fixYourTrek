@@ -28,7 +28,7 @@ export function findExistingPoint(
     lat: number,
     lon: number
 ) {
-    const threshold = 5e-5 // ~5m
+    const threshold = 8e-5 // ~8m
 
     for (let sIdx = 0; sIdx < track.segments.length; sIdx++) {
         const seg = track.segments[sIdx]
@@ -84,7 +84,7 @@ export function resolveInsertAction(track: any, lat: number, lon: number) {
 
     // close to polyline
     const closest = findClosestSegment(track, lat, lon)
-    const lineThreshold = 5e-5
+    const lineThreshold = 8e-5
 
     if (closest.dist < lineThreshold) {
         return {

@@ -23,7 +23,8 @@ const contextPoint = computed(() => {
     return findPointById(store.track, contextPointId.value)
 })
 
-const contextPos = ref<{ x: number; y: number } | null>(null)
+const contextPos = ref<{ x: number; y: number }>({ x: 0, y: 0 })
+
 const contextRadius = ref(50)
 
 function onGlobalClick(e: MouseEvent) {

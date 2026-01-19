@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, onMounted, nextTick } from 'vue'
 import { useTrackStore } from '@/store/trackStore'
 import { findPointLocation } from '@/utils/findPointLocation'
 import { updateTime } from '@/api/trackApi'
@@ -14,6 +14,13 @@ const props = defineProps<{
         max?: string
     }
 }>()
+
+const menuEl = ref<HTMLElement | null>(null)
+
+const pos = ref({
+    x: props.position!.x,
+    y: props.position!.y
+})
 
 const emit = defineEmits<{
     (e: 'close'): void
@@ -44,6 +51,31 @@ const isChanged = computed(() => {
     return newTime.value !== props.currentTime
 })
 
+function adjustPosition() {
+    if (!menuEl.value) return
+
+    const rect = menuEl.value.getBoundingClientRect()
+    const padding = 8
+
+    let x = pos.value.x
+    let y = pos.value.y
+
+    const vw = window.innerWidth
+    const vh = window.innerHeight
+
+    if (rect.right > vw) {
+        x = vw - rect.width - padding
+    }
+
+    if (rect.bottom > vh) {
+        y = vh - rect.height - padding
+    }
+
+    if (x < padding) x = padding
+    if (y < padding) y = padding
+
+    pos.value = { x, y }
+}
 
 watch(radius, v => emit('update-radius', v))
 
@@ -73,6 +105,24 @@ async function applyTime() {
     emit('close')
 }
 
+onMounted(async () => {
+    await nextTick()
+    adjustPosition()
+})
+
+watch(
+    () => props.position,
+    async (p) => {
+        if (!p) return
+        pos.value = {
+            x: props.position!.x + 10,
+            y: props.position!.y + 10
+        }
+        await nextTick()
+        adjustPosition()
+    }
+)
+
 watch(
     () => props.point,
     () => {
@@ -90,8 +140,9 @@ function onDelete() {
 
 <template>
     <div
+        ref="menuEl"
         class="context-menu"
-        :style="{ left: position!.x + 'px', top: position!.y + 'px' }"
+        :style="{ left: pos.x + 'px', top: pos.y + 'px' }"
         @mousedown.stop
     >
         <label class="field">

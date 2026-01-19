@@ -63,7 +63,7 @@ export function renderPointMarker(
         marker.on('dragend', async (e) => {
             const store = useTrackStore()
 
-            if (!store.insertMode) return
+            if (store.editorMode !== 'insert') return
             if (!store.track || !store.sessionId) return
 
             const { lat, lng } = e.target.getLatLng()
