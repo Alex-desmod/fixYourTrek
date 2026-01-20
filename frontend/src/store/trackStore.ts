@@ -18,6 +18,8 @@ export const useTrackStore = defineStore('track', {
         track: null as any,
         editorMode: null as EditorMode,
 
+        hoverPoint: null as any | null,
+
         /* ---------- NORMALIZE ---------- */
         normalizeOpen: false,
         normalizeParams: {
@@ -110,6 +112,10 @@ export const useTrackStore = defineStore('track', {
 
         selectPoint(p: any) {
             this.selectedPoint = p
+        },
+
+        setHoverPoint(p: any | null) {
+            this.hoverPoint = p
         }
     }
 })

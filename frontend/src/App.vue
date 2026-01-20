@@ -2,6 +2,7 @@
 import MapView from '@/components/MapView.vue'
 import TopMenu from '@/components/TopMenu.vue'
 import Sidebar from '@/components/Sidebar.vue'
+import ProfileView from '@/components/ProfileView.vue'
 import { useTrackStore } from '@/store/trackStore'
 
 const store = useTrackStore()
@@ -11,6 +12,7 @@ const store = useTrackStore()
     <div id="app">
         <TopMenu />
         <Sidebar />
+        <ProfileView v-if="store.track" />
         <MapView />
     </div>
 </template>

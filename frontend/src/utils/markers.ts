@@ -20,6 +20,7 @@ const pointUI = new Map<string, { influenceRadius: number }>()
 
 let startMarker: L.Marker | null = null
 let finishMarker: L.Marker | null = null
+let hoverMarker: L.Marker | null = null
 
 /* ---------- POINTS ---------- */
 
@@ -182,5 +183,26 @@ export function renderStartFinishMarkers(
         }).addTo(map)
     } else {
         finishMarker.setLatLng(finishLatLng)
+    }
+}
+
+export function renderHoverMarker(map: L.Map, point: any) {
+    if (!point) {
+        if (hoverMarker) {
+            map.removeLayer(hoverMarker)
+            hoverMarker = null
+        }
+        return
+    }
+
+    if (!hoverMarker) {
+        hoverMarker = L.circleMarker([point.lat, point.lon], {
+            radius: 6,
+            color: 'blue',
+            fillColor: 'blue',
+            fillOpacity: 1
+        }).addTo(map)
+    } else {
+        hoverMarker.setLatLng([point.lat, point.lon])
     }
 }

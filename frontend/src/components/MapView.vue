@@ -4,7 +4,7 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useTrackStore } from '@/store/trackStore'
 import { renderTrack } from '@/utils/renderTrack'
-import { clearPointMarkers, deletePointMarker, syncPointMarkers, getPointUI } from '@/utils/markers'
+import { clearPointMarkers, deletePointMarker, syncPointMarkers, getPointUI, renderHoverMarker } from '@/utils/markers'
 import { enableInsertPointMode, disableInsertPointMode } from '@/utils/insertPoint'
 import { findPointLocation, findPointById } from '@/utils/findPointLocation'
 import { renderNormalizePreview, clearNormalizePreview } from '@/utils/normalizePreview'
@@ -226,6 +226,14 @@ watch(
         }
 
         renderNormalizePreview(map.value, store.track, preview)
+    }
+)
+
+watch(
+    () => store.hoverPoint,
+    (p) => {
+        if (!map.value) return
+        renderHoverMarker(map.value, p)
     }
 )
 
