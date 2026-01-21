@@ -5,28 +5,45 @@ export interface ProfilePoint {
     lon: number
     ele: number | null
     distKm: number
+    speed: number | null
     point: any
 }
 
 export function buildProfile(track: any): ProfilePoint[] {
     const pts: ProfilePoint[] = []
-    let dist = 0
+    let distKm = 0
 
     for (const seg of track.segments) {
         for (let i = 0; i < seg.points.length; i++) {
             const p = seg.points[i]
+            let speed: number | null = null
 
             if (i > 0) {
                 const prev = seg.points[i - 1]
-                dist += L.latLng(prev.lat, prev.lon)
-                .distanceTo([p.lat, p.lon]) / 1000
+
+                const distM =
+                    L.latLng(prev.lat, prev.lon)
+                        .distanceTo([p.lat, p.lon])
+
+                distKm += distM / 1000
+
+                if (prev.time && p.time) {
+                    const dt =
+                        (new Date(p.time).getTime() -
+                         new Date(prev.time).getTime()) / 1000
+
+                    if (dt > 0) {
+                        speed = distM / dt
+                    }
+                }
             }
 
             pts.push({
                 lat: p.lat,
                 lon: p.lon,
                 ele: p.ele ?? null,
-                distKm: dist,
+                distKm,
+                speed,
                 point: p
             })
         }

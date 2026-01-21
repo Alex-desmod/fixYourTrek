@@ -43,7 +43,7 @@ function toggleNormalize() {
 <style scoped>
 #sidebar {
     position: fixed;
-    top: 50%;
+    top: 40%;
     left: 10px;
     display: flex;
     flex-direction: column;
@@ -74,5 +74,13 @@ function toggleNormalize() {
     left: 48px;
     top: 0;
     z-index: 1000;
+}
+
+@media (max-width: 768px) {
+    .tool-btn {
+        width: 42px;
+        height: 42px;
+        font-size: 18px;
+    }
 }
 </style>

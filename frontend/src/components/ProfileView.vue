@@ -49,6 +49,14 @@ const maxEle = computed(() =>
     Math.max(...profile.value.map(p => p.ele))
 )
 
+const minSpeed = computed(() =>
+    Math.min(...profile.value.map(p => p.speed ?? 0))
+)
+
+const maxSpeed = computed(() =>
+    Math.max(...profile.value.map(p => p.speed ?? 0))
+)
+
 /* ---------- elevation stats ---------- */
 
 const elevationStats = computed(() => {
@@ -109,12 +117,40 @@ const xTicks = computed(() => {
     return ticks
 })
 
+const speedTicks = computed(() => {
+    const step = niceStep(maxSpeed.value - minSpeed.value, 5)
+    const ticks = []
+
+    for (
+        let v = Math.floor(minSpeed.value / step) * step;
+        v <= maxSpeed.value;
+        v += step
+    ) {
+        ticks.push(v)
+    }
+
+    return ticks
+})
+
+
 function yScale(ele: number) {
     const range = maxEle.value - minEle.value || 1
     return (
         height -
         paddingBottom -
         ((ele - minEle.value) / range) *
+        (height - paddingTop - paddingBottom)
+    )
+}
+
+function speedY(speed: number) {
+    const min = minSpeed.value
+    const max = maxSpeed.value || min + 1
+
+    return (
+        height -
+        paddingBottom -
+        ((speed - min) / (max - min)) *
         (height - paddingTop - paddingBottom)
     )
 }
@@ -137,6 +173,19 @@ const areaPoints = computed(() => {
 
     return [...top, ...bottom].join(' ')
 })
+
+const speedLine = computed(() => {
+    if (!profile.value.length || width.value === 0) return ''
+
+    return profile.value
+        .map(p => {
+            const x = (p.distKm / totalDistanceKm.value) * width.value
+            const y = speedY(p.speed ?? 0)
+            return `${x},${y}`
+        })
+        .join(' ')
+})
+
 
 /* ---------- hover interaction ---------- */
 
@@ -213,6 +262,13 @@ function onLeave() {
                 <!-- area -->
                 <polygon :points="areaPoints" fill="#ddd" />
 
+                <polyline
+                    :points="speedLine"
+                    fill="none"
+                    stroke="#e53935"
+                    stroke-width="2"
+                />
+
                 <!-- hover line -->
                 <line
                     v-if="hoverX !== null"
@@ -234,6 +290,17 @@ function onLeave() {
                 >
                     {{ d.toFixed(1) }} km
                 </span>
+            </div>
+
+            <div class="speed-axis">
+                <div
+                    v-for="v in speedTicks"
+                    :key="v"
+                    class="tick"
+                    :style="{ top: speedY(v) + 'px' }"
+                >
+                    {{ v.toFixed(1) }}
+                </div>
             </div>
         </div>
     </div>
@@ -287,4 +354,22 @@ function onLeave() {
     font-size: 10px;
     color: #666;
 }
+
+.speed-axis {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 40px;
+    pointer-events: none;
+}
+
+.speed-axis .tick {
+    position: absolute;
+    right: 4px;
+    transform: translateY(-50%);
+    font-size: 10px;
+    color: #e53935;
+}
+
 </style>
