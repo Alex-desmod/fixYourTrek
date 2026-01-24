@@ -17,6 +17,12 @@ const paddingBottom = 20
 
 let ro: ResizeObserver | null = null
 
+const collapsed = ref(false)
+
+function toggle() {
+    collapsed.value = !collapsed.value
+}
+
 onMounted(() => {
     if (!chartEl.value) return
 
@@ -83,6 +89,18 @@ const endTime = computed(() => {
 })
 
 /* ---------- scales ---------- */
+
+const LEFT_PAD = 50          // for the heigth scale
+const RIGHT_PAD_RATIO = 0.05 // 10% from the right
+
+const drawWidth = computed(() => {
+    return Math.max(0, width.value * (1 - RIGHT_PAD_RATIO) - LEFT_PAD)
+})
+
+function xScale(distKm: number) {
+    if (!totalDistanceKm.value) return LEFT_PAD
+    return LEFT_PAD + (distKm / totalDistanceKm.value) * drawWidth.value
+}
 
 function niceStep(range: number, target: number) {
     const raw = range / target
@@ -155,20 +173,20 @@ function speedY(speed: number) {
     )
 }
 
-/* ---------- area polygon ---------- */
+/* ---------- area polygon and polyline ---------- */
 
 const areaPoints = computed(() => {
     if (!profile.value.length || width.value === 0) return ''
 
     const top = profile.value.map(p => {
-        const x = (p.distKm / totalDistanceKm.value) * width.value
+        const x = xScale(p.distKm)
         const y = yScale(p.ele)
         return `${x},${y}`
     })
 
     const bottom = [
-        `${width.value},${height - paddingBottom}`,
-        `0,${height - paddingBottom}`
+        `${LEFT_PAD + drawWidth.value},${height - paddingBottom}`,
+        `${LEFT_PAD},${height - paddingBottom}`
     ]
 
     return [...top, ...bottom].join(' ')
@@ -179,7 +197,7 @@ const speedLine = computed(() => {
 
     return profile.value
         .map(p => {
-            const x = (p.distKm / totalDistanceKm.value) * width.value
+            const x = xScale(p.distKm)
             const y = speedY(p.speed ?? 0)
             return `${x},${y}`
         })
@@ -195,10 +213,19 @@ function onMove(e: MouseEvent) {
     if (!chartEl.value || !profile.value.length) return
 
     const rect = chartEl.value.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    hoverX.value = x
+    const rawX = e.clientX - rect.left
 
-    const ratio = x / rect.width
+    // limit of cursor moving by the  working area
+    const clampedX = Math.min(
+        LEFT_PAD + drawWidth.value,
+        Math.max(LEFT_PAD, rawX)
+    )
+
+    hoverX.value = clampedX
+
+    const ratio =
+        (clampedX - LEFT_PAD) / drawWidth.value
+
     const targetDist = ratio * totalDistanceKm.value
 
     let best = profile.value[0]
@@ -222,84 +249,107 @@ function onLeave() {
 </script>
 
 <template>
-    <div class="profile">
-        <!-- LEFT INFO -->
-        <div class="info">
-            <div><strong>Distance</strong> {{ totalDistanceKm.toFixed(2) }} km</div>
-            <div v-if="startTime">
-                <strong>Start</strong> {{ startTime.toLocaleTimeString() }}
-            </div>
-            <div v-if="endTime">
-                <strong>Finish</strong> {{ endTime.toLocaleTimeString() }}
-            </div>
-            <div>
-                <strong>↑</strong> {{ elevationStats.gain.toFixed(0) }} m
-                &nbsp;
-                <strong>↓</strong> {{ elevationStats.loss.toFixed(0) }} m
-            </div>
+    <div class="profile" :class="{ collapsed }">
+        <div class="header" @click="toggle">
+            <span class="chevron">
+                {{ collapsed ? '▲' : '▼' }}
+            </span>
         </div>
+        <div class="content">
+            <!-- LEFT INFO -->
+            <div class="info">
+                <div><strong>Distance</strong> {{ totalDistanceKm.toFixed(2) }} km</div>
+                <div v-if="startTime">
+                    <strong>Start</strong> {{ startTime.toLocaleTimeString() }}
+                </div>
+                <div v-if="endTime">
+                    <strong>Finish</strong> {{ endTime.toLocaleTimeString() }}
+                </div>
+                <div>
+                    <strong>↑</strong> {{ elevationStats.gain.toFixed(0) }} m
+                    &nbsp;
+                    <strong>↓</strong> {{ elevationStats.loss.toFixed(0) }} m
+                </div>
+            </div>
 
-        <!-- CHART -->
-        <div
-            ref="chartEl"
-            class="chart"
-            @mousemove="onMove"
-            @mouseleave="onLeave"
-        >
-            <svg :width="width" :height="height">
-                <!-- grid Y -->
-                <g class="grid">
+            <!-- CHART -->
+            <div
+                ref="chartEl"
+                class="chart"
+                @mousemove="onMove"
+                @mouseleave="onLeave"
+            >
+                <svg :width="width" :height="height">
+                    <!-- grid Y -->
+                    <g class="grid">
+                        <line
+                            v-for="v in yTicks"
+                            :key="v"
+                            :x1="LEFT_PAD"
+                            :y1="yScale(v)"
+                            :x2="LEFT_PAD + drawWidth"
+                            :y2="yScale(v)"
+                        />
+                    </g>
+
+                    <!-- area -->
+                    <polygon :points="areaPoints" fill="#ddd" />
+
+                    <polyline
+                        :points="speedLine"
+                        fill="none"
+                        stroke="#e53935"
+                        stroke-width="2"
+                    />
+
+                    <!-- hover line -->
                     <line
+                        v-if="hoverX !== null"
+                        :x1="hoverX"
+                        y1="0"
+                        :x2="hoverX"
+                        :y2="height"
+                        stroke="#808080"
+                        stroke-width="1"
+                    />
+                </svg>
+
+                <!-- X labels -->
+                <div class="x-labels">
+                    <span
+                        v-for="d in xTicks"
+                        :key="d"
+                        :style="{
+                            left:
+                                LEFT_PAD +
+                                (d / totalDistanceKm) * drawWidth +
+                                'px'
+                        }"
+                    >
+                        {{ d.toFixed(1) }} km
+                    </span>
+                </div>
+
+                <div class="elevation-axis">
+                    <div
                         v-for="v in yTicks"
                         :key="v"
-                        x1="0"
-                        :y1="yScale(v)"
-                        :x2="width"
-                        :y2="yScale(v)"
-                    />
-                </g>
+                        class="tick"
+                        :style="{ top: yScale(v) + 'px' }"
+                    >
+                        {{ v.toFixed(0) }} m
+                    </div>
+                </div>
 
-                <!-- area -->
-                <polygon :points="areaPoints" fill="#ddd" />
-
-                <polyline
-                    :points="speedLine"
-                    fill="none"
-                    stroke="#e53935"
-                    stroke-width="2"
-                />
-
-                <!-- hover line -->
-                <line
-                    v-if="hoverX !== null"
-                    :x1="hoverX"
-                    y1="0"
-                    :x2="hoverX"
-                    :y2="height"
-                    stroke="#808080"
-                    stroke-width="1"
-                />
-            </svg>
-
-            <!-- X labels -->
-            <div class="x-labels">
-                <span
-                    v-for="d in xTicks"
-                    :key="d"
-                    :style="{ left: (d / totalDistanceKm) * 100 + '%' }"
-                >
-                    {{ d.toFixed(1) }} km
-                </span>
-            </div>
-
-            <div class="speed-axis">
-                <div
-                    v-for="v in speedTicks"
-                    :key="v"
-                    class="tick"
-                    :style="{ top: speedY(v) + 'px' }"
-                >
-                    {{ v.toFixed(1) }}
+                <div class="speed-axis">
+                    <div
+                        v-for="v in speedTicks"
+                        :key="v"
+                        class="tick"
+                        :style="{ top: speedY(v) + 'px' }"
+                    >
+                        {{ v.toFixed(1) }}
+                    </div>
                 </div>
             </div>
         </div>
@@ -312,12 +362,43 @@ function onLeave() {
     bottom: 0;
     left: 0;
     right: 0;
-
     display: flex;
     height: 160px;
     background: rgb(255,255,255,0.8);
     border-top: 1px solid #ccc;
     z-index: 2000;
+    flex-direction: column;
+    transition: height 0.25s ease;
+}
+
+.profile.collapsed {
+    height: 15px;
+}
+
+.header {
+    height: 28px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f6f6f6;
+    border-bottom: 1px solid #ddd;
+    user-select: none;
+}
+
+.chevron {
+    font-size: 14px;
+    color: #555;
+}
+
+.content {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
+.profile.collapsed .content {
+    pointer-events: none;
 }
 
 .info {
@@ -333,6 +414,10 @@ function onLeave() {
 .chart {
     position: relative;
     flex: 1;
+}
+
+.chart svg {
+    display: block;
 }
 
 .grid line {
@@ -353,6 +438,24 @@ function onLeave() {
     transform: translateX(-50%);
     font-size: 10px;
     color: #666;
+}
+
+.elevation-axis {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 44px;
+    pointer-events: none;
+}
+
+.elevation-axis .tick {
+    position: absolute;
+    left: 4px;
+    transform: translateY(-50%);
+    font-size: 10px;
+    color: #666;
+    white-space: nowrap;
 }
 
 .speed-axis {

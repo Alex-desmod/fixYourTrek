@@ -10,7 +10,7 @@ export type TrackUpdateReason =
     | 'reset'
     | 'normalize'
 
-export type EditorMode = 'insert' | 'normalize' | null
+export type EditorMode = 'insert' | 'normalize' | 'trim' | null
 
 export const useTrackStore = defineStore('track', {
     state: () => ({
@@ -27,6 +27,12 @@ export const useTrackStore = defineStore('track', {
             minPoints: 10
         },
         normalizePreview: null as any | null,
+
+        /* ---------- TRIM ---------- */
+        trim: {
+            startId: null as number | null,
+            endId: null as number | null
+        }
 
         /* ---------- UI ---------- */
         selectedPoint: null as any,
@@ -65,6 +71,11 @@ export const useTrackStore = defineStore('track', {
         setEditorMode(mode: EditorMode) {
             if (!this.track) return
             this.editorMode = this.editorMode === mode ? null : mode
+            if (mode === 'trim' && this.track) {
+                const pts = this.track.segments.flatMap(s => s.points)
+                this.trim.startId = pts[0]?.id ?? null
+                this.trim.endId = pts.at(-1)?.id ?? null
+            }
         },
 
         disableEditorMode() {

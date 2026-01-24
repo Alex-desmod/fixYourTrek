@@ -7,6 +7,7 @@ export interface ProfilePoint {
     distKm: number
     speed: number | null
     point: any
+    trimmedOut: boolean
 }
 
 export function buildProfile(track: any): ProfilePoint[] {

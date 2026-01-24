@@ -36,6 +36,18 @@ function toggleNormalize() {
         >
             ✏️
         </button>
+
+        <div class="tool-wrapper">
+            <button
+                class="tool-btn"
+                :disabled="!store.track"
+                :class="{ active: store.editorMode === 'trim' }"
+                @click="store.setEditorMode('trim')"
+                title="Trim track"
+            >
+                T
+            </button>
+        </div>
     </div>
 </template>
 

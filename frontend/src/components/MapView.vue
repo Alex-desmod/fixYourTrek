@@ -8,6 +8,7 @@ import { clearPointMarkers, deletePointMarker, syncPointMarkers, getPointUI, ren
 import { enableInsertPointMode, disableInsertPointMode } from '@/utils/insertPoint'
 import { findPointLocation, findPointById } from '@/utils/findPointLocation'
 import { renderNormalizePreview, clearNormalizePreview } from '@/utils/normalizePreview'
+import { renderTrimPreview, clearTrimPreview } from '@/utils/trimPreview'
 import PointContextMenu from '@/components/PointContextMenu.vue'
 
 const mapEl = ref<HTMLDivElement | null>(null)
@@ -227,6 +228,37 @@ watch(
 
         renderNormalizePreview(map.value, store.track, preview)
     }
+)
+
+watch(
+    () => store.editorMode,
+    (mode) => {
+        if (!map.value) return
+
+        if (mode !== 'trim') {
+            clearTrimPreview(map.value)
+        }
+    }
+)
+
+watch(
+    () => store.trim,
+    ({ startId, endId }) => {
+        if (!map.value) return
+
+        if (store.editorMode !== 'trim') {
+            clearTrimPreview(map.value)
+            return
+        }
+
+        renderTrimPreview(
+            map.value,
+            store.track,
+            startId,
+            endId
+        )
+    },
+    { deep: true }
 )
 
 watch(

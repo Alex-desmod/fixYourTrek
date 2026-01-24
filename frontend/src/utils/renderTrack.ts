@@ -3,6 +3,7 @@ import { renderStartFinishMarkers } from './markers'
 
 let polyline: L.Polyline | null = null
 
+
 export function renderTrack(
     map: L.Map,
     track: any,

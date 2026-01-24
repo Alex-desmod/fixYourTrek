@@ -251,26 +251,40 @@ class TrackSession:
         center.lat = new_lat
         center.lon = new_lon
 
-    def trim(self, start_idx: int, end_idx: int):
+    def trim(self, start_point_id: int, end_point_id: int):
         """
-        Trimming the track:
-        removes the points before the start_idx and after the end_idx.
+        Trim track between two point IDs (inclusive).
+        Works correctly with multiple segments.
         """
-
         self._save_state()
 
-        new_segments: List[TrackSegment] = []
-        global_idx = 0
+        new_segments: list[TrackSegment] = []
+
+        collecting = False
+        finished = False
 
         for segment in self.current_track.segments:
             new_points = []
+
             for p in segment.points:
-                if start_idx <= global_idx <= end_idx:
+                if p.id == start_point_id:
+                    collecting = True
+
+                if collecting and not finished:
                     new_points.append(p)
-                global_idx += 1
+
+                if p.id == end_point_id:
+                    finished = True
+                    collecting = False
 
             if new_points:
                 new_segments.append(TrackSegment(points=new_points))
+
+            if finished:
+                break
+
+        if not new_segments:
+            raise ValueError("Invalid trim range: no points selected")
 
         self.current_track.segments = new_segments
 

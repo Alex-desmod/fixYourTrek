@@ -43,5 +43,5 @@ class RerouteRequest(BaseModel):
 
 class TrimRequest(BaseModel):
     session_id: str
-    start_idx: int
-    end_idx: int
+    start_point_id: str
+    end_point_id: str
