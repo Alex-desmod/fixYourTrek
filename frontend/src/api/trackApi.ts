@@ -118,6 +118,24 @@ export async function reroute(payload: {
     return await res.json()
 }
 
+export async function trimTrack(payload: {
+    session_id: string
+    start_point_id: string
+    end_point_id: string
+}) {
+    const res = await fetch('/api/track/trim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+
+    if (!res.ok) {
+        const text = await res.text()
+        throw new Error(`trim failed: ${res.status} ${text}`)
+    }
+    return await res.json()
+}
+
 export async function exportTrack(payload: {
     session_id: string
     name: string

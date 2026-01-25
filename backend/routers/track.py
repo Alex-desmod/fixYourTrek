@@ -120,7 +120,7 @@ async def trim_track(req: TrimRequest):
     session = session_manager.get(req.session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
-    session.trim(start_idx=req.start_idx, end_idx=req.end_idx)
+    session.trim(start_point_id=req.start_point_id, end_point_id=req.end_point_id)
     return {"track": session.current_track.to_dict()}
 
 @router.post("/merge")

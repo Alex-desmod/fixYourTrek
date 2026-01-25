@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { useTrackStore } from '@/store/trackStore'
 import NormalizeMenu from '@/components/NormalizeMenu.vue'
+import TrimMenu from '@/components/TrimMenu.vue'
+
 const store = useTrackStore()
 
 function toggleNormalize() {
@@ -23,7 +25,7 @@ function toggleNormalize() {
 
             <NormalizeMenu
                 v-if="store.editorMode === 'normalize'"
-                class="normalize-menu"
+                class="mode-menu"
             />
         </div>
 
@@ -43,10 +45,15 @@ function toggleNormalize() {
                 :disabled="!store.track"
                 :class="{ active: store.editorMode === 'trim' }"
                 @click="store.setEditorMode('trim')"
-                title="Trim track"
+                title="Trim the track"
             >
                 T
             </button>
+
+            <TrimMenu
+                v-if="store.editorMode === 'trim'"
+                class="mode-menu"
+            />
         </div>
     </div>
 </template>
@@ -81,7 +88,7 @@ function toggleNormalize() {
     position: relative;
 }
 
-.normalize-menu {
+.mode-menu {
     position: absolute;
     left: 48px;
     top: 0;

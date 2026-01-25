@@ -231,25 +231,14 @@ watch(
 )
 
 watch(
-    () => store.editorMode,
-    (mode) => {
+    () => [store.editorMode, store.trim.startId, store.trim.endId],
+    ([mode, startId, endId]) => {
         if (!map.value) return
 
-        if (mode !== 'trim') {
-            clearTrimPreview(map.value)
-        }
-    }
-)
+        clearTrimPreview(map.value)
 
-watch(
-    () => store.trim,
-    ({ startId, endId }) => {
-        if (!map.value) return
-
-        if (store.editorMode !== 'trim') {
-            clearTrimPreview(map.value)
-            return
-        }
+        if (mode !== 'trim') return
+        if (!startId || !endId) return
 
         renderTrimPreview(
             map.value,
@@ -258,8 +247,9 @@ watch(
             endId
         )
     },
-    { deep: true }
+    { immediate: true }
 )
+
 
 watch(
     () => store.hoverPoint,

@@ -204,6 +204,57 @@ const speedLine = computed(() => {
         .join(' ')
 })
 
+const trim = computed(() => store.trim)
+
+const trimRange = computed(() => {
+    if (!trim.value.startId || !trim.value.endId) return null
+
+    const startIdx = profile.value.findIndex(
+        p => p.point.id === trim.value.startId
+    )
+    const endIdx = profile.value.findIndex(
+        p => p.point.id === trim.value.endId
+    )
+
+    if (startIdx === -1 || endIdx === -1) return null
+    if (startIdx >= endIdx) return null
+
+    return { startIdx, endIdx }
+})
+
+const trimBeforeArea = computed(() => {
+    if (!trimRange.value || width.value === 0) return ''
+
+    const pts = profile.value.slice(0, trimRange.value.startIdx + 1)
+
+    return buildAreaPolygon(pts)
+})
+
+const trimAfterArea = computed(() => {
+    if (!trimRange.value || width.value === 0) return ''
+
+    const pts = profile.value.slice(trimRange.value.endIdx)
+
+    return buildAreaPolygon(pts)
+})
+
+function buildAreaPolygon(pts: ProfilePoint[]) {
+    if (!pts.length) return ''
+
+    const top = pts.map(p => {
+        const x = LEFT_PAD + (p.distKm / totalDistanceKm.value) * drawWidth.value
+        const y = yScale(p.ele)
+        return `${x},${y}`
+    })
+
+    const bottom = [
+        `${LEFT_PAD + (pts.at(-1)!.distKm / totalDistanceKm.value) * drawWidth.value},${height - paddingBottom}`,
+        `${LEFT_PAD + (pts[0].distKm / totalDistanceKm.value) * drawWidth.value},${height - paddingBottom}`
+    ]
+
+    return [...top, ...bottom].join(' ')
+}
+
 
 /* ---------- hover interaction ---------- */
 
@@ -294,6 +345,21 @@ function onLeave() {
 
                     <!-- area -->
                     <polygon :points="areaPoints" fill="#ddd" />
+
+                    <!-- trim preview -->
+                    <polygon
+                        v-if="trimBeforeArea"
+                        :points="trimBeforeArea"
+                        fill="red"
+                        opacity="0.9"
+                    />
+
+                    <polygon
+                        v-if="trimAfterArea"
+                        :points="trimAfterArea"
+                        fill="red"
+                        opacity="0.9"
+                    />
 
                     <polyline
                         :points="speedLine"

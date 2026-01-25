@@ -30,9 +30,9 @@ export const useTrackStore = defineStore('track', {
 
         /* ---------- TRIM ---------- */
         trim: {
-            startId: null as number | null,
-            endId: null as number | null
-        }
+            startId: null as string | null,
+            endId: null as string | null
+        },
 
         /* ---------- UI ---------- */
         selectedPoint: null as any,
@@ -67,19 +67,28 @@ export const useTrackStore = defineStore('track', {
         },
 
         /* ---------- MODES ---------- */
-
         setEditorMode(mode: EditorMode) {
             if (!this.track) return
-            this.editorMode = this.editorMode === mode ? null : mode
-            if (mode === 'trim' && this.track) {
+
+            // toggle
+            if (this.editorMode === mode) {
+                this.editorMode = null
+
+                if (mode === 'trim') {
+                    this.trim.startId = null
+                    this.trim.endId = null
+                }
+
+                return
+            }
+
+            this.editorMode = mode
+
+            if (mode === 'trim') {
                 const pts = this.track.segments.flatMap(s => s.points)
                 this.trim.startId = pts[0]?.id ?? null
                 this.trim.endId = pts.at(-1)?.id ?? null
             }
-        },
-
-        disableEditorMode() {
-            this.editorMode = null
         },
 
         /* ---------- NORMALIZE ---------- */

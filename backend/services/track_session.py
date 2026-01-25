@@ -251,13 +251,12 @@ class TrackSession:
         center.lat = new_lat
         center.lon = new_lon
 
-    def trim(self, start_point_id: int, end_point_id: int):
+    def trim(self, start_point_id: str, end_point_id: str):
         """
         Trim track between two point IDs (inclusive).
         Works correctly with multiple segments.
         """
         self._save_state()
-
         new_segments: list[TrackSegment] = []
 
         collecting = False
