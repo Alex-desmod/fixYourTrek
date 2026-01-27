@@ -2,6 +2,9 @@
 import { useTrackStore } from '@/store/trackStore'
 import NormalizeMenu from '@/components/NormalizeMenu.vue'
 import TrimMenu from '@/components/TrimMenu.vue'
+import editIcon from '@/assets/icons/edit.svg'
+import trimIcon from '@/assets/icons/trim.svg'
+import normalizeIcon from '@/assets/icons/normalize.svg'
 
 const store = useTrackStore()
 
@@ -20,7 +23,7 @@ function toggleNormalize() {
                 @click="store.setEditorMode('normalize')"
                 title="Detect GPS stucks and normalize the track"
             >
-                N
+                <img :src="normalizeIcon" class="icon" />
             </button>
 
             <NormalizeMenu
@@ -36,7 +39,7 @@ function toggleNormalize() {
             @click="store.setEditorMode('insert')"
             title="Insert a point and edit the track"
         >
-            ✏️
+            <img :src="editIcon" class="icon" />
         </button>
 
         <div class="tool-wrapper">
@@ -47,7 +50,7 @@ function toggleNormalize() {
                 @click="store.setEditorMode('trim')"
                 title="Trim the track"
             >
-                T
+                <img :src="trimIcon" class="icon" />
             </button>
 
             <TrimMenu
@@ -74,6 +77,9 @@ function toggleNormalize() {
     width: 40px;
     height: 40px;
     padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .tool-btn:hover {
@@ -82,6 +88,11 @@ function toggleNormalize() {
 
 .tool-btn.active {
     background: #d1d1d1;
+}
+
+.icon {
+    width: 25px;
+    height: 25px;
 }
 
 .tool-wrapper {
@@ -101,5 +112,6 @@ function toggleNormalize() {
         height: 42px;
         font-size: 18px;
     }
+
 }
 </style>
