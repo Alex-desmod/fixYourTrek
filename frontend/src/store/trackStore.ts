@@ -10,7 +10,7 @@ export type TrackUpdateReason =
     | 'reset'
     | 'normalize'
 
-export type EditorMode = 'insert' | 'normalize' | 'trim' | null
+export type EditorMode = 'insert' | 'normalize' | 'trim' | 'merge' | null
 
 export const useTrackStore = defineStore('track', {
     state: () => ({
