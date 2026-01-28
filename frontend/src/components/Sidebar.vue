@@ -93,6 +93,7 @@ function toggleNormalize() {
 .icon {
     width: 25px;
     height: 25px;
+    opacity: 0.9;
 }
 
 .tool-wrapper {

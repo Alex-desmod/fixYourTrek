@@ -1,7 +1,9 @@
+import re
 from typing import Literal
 
 from fastapi import UploadFile, APIRouter, File, HTTPException
 from fastapi.responses import Response
+from urllib.parse import quote
 
 from backend.models.track import GpsStuck
 from backend.schemas.track_requests import (SessionRequest, RerouteRequest, TrimRequest,
@@ -132,6 +134,18 @@ async def merge_track(session_id: str, file: UploadFile = File(...)):
     session.merge_with(second_track)
     return {"track": session.current_track.to_dict()}
 
+def content_disposition(filename: str) -> str:
+    ascii_fallback = "".join(
+        c if ord(c) < 128 else "_" for c in filename
+    )
+    quoted = quote(filename)
+
+    return (
+        f"attachment; "
+        f'filename="{ascii_fallback}"; '
+        f"filename*=UTF-8''{quoted}"
+    )
+
 @router.get("/export")
 async def export(session_id: str, name: str, fmt: Literal["gpx", "fit", "tcx"]="gpx"):
     """
@@ -144,12 +158,13 @@ async def export(session_id: str, name: str, fmt: Literal["gpx", "fit", "tcx"]="
 
     content = await export_track(track, fmt)
     data = content["data"]
+    name = re.sub(r"[\\/:\*\?\"<>\|]", "_", name).strip()
     filename = f"{name}.{fmt}"
     media_type = content["media_type"]
     return Response(
         content=data,
         media_type=media_type,
-        headers={"Content-Disposition": f'attachment; filename=\"{filename}\"'}
+        headers={"Content-Disposition": content_disposition(filename)}
     )
 
 
