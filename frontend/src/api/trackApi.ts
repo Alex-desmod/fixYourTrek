@@ -136,6 +136,26 @@ export async function trimTrack(payload: {
     return await res.json()
 }
 
+export async function mergeTrack(payload: {
+    session_id: string
+    file: File
+}) {
+    const fd = new FormData()
+    fd.append('file', payload.file)
+
+    const res = await fetch(`/api/track/merge?session_id=${encodeURIComponent(payload.session_id)}`, {
+        method: 'POST',
+        body: fd
+    })
+
+    if (!res.ok) {
+        const text = await res.text()
+        throw new Error(`merge failed: ${res.status} ${text}`)
+    }
+
+    return await res.json()
+}
+
 export async function exportTrack(payload: {
     session_id: string
     name: string

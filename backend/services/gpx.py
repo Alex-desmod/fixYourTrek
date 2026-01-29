@@ -1,8 +1,9 @@
 import gpxpy
-from xml.etree.ElementTree import Element, SubElement
+from xml.etree.ElementTree import Element, SubElement, register_namespace
 
 from backend.models.track import Track, TrackSegment, TrackPoint, TrackMetadata
 
+GPXTPX_NS = "http://www.garmin.com/xmlschemas/TrackPointExtension/v1"
 
 def load_gpx(content: bytes) -> Track:
     gpx = gpxpy.parse(content.decode("utf-8"))
@@ -74,6 +75,7 @@ def _extract_gpx_extension(extensions, key: str):
 
 def to_gpx(track: Track) -> str:
     gpx = gpxpy.gpx.GPX()
+    gpx.nsmap["gpxtpx"] = GPXTPX_NS
     md = track.metadata
 
     # ----- GPX metadata -----
@@ -109,18 +111,23 @@ def to_gpx(track: Track) -> str:
 
             # ----- Extensions (hr, cad, power) -----
             if p.hr is not None or p.cadence is not None or p.power is not None:
-                ext_root = Element("gpxtpx:TrackPointExtension")
+                ext = Element("extensions")
+
+                tpx = SubElement(
+                    ext,
+                    f"{{{GPXTPX_NS}}}TrackPointExtension"
+                )
 
                 if p.hr is not None:
-                    SubElement(ext_root, "gpxtpx:hr").text = str(p.hr)
+                    SubElement(tpx, f"{{{GPXTPX_NS}}}hr").text = str(p.hr)
 
                 if p.cadence is not None:
-                    SubElement(ext_root, "gpxtpx:cad").text = str(p.cadence)
+                    SubElement(tpx, f"{{{GPXTPX_NS}}}cad").text = str(p.cadence)
 
                 if p.power is not None:
-                    SubElement(ext_root, "gpxtpx:power").text = str(p.power)
+                    SubElement(tpx, f"{{{GPXTPX_NS}}}power").text = str(p.power)
 
-                point.extensions.append(ext_root)
+                point.extensions.append(ext)
 
             gpx_segment.points.append(point)
 

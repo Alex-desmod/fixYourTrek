@@ -9,6 +9,7 @@ export type TrackUpdateReason =
     | 'redo'
     | 'reset'
     | 'normalize'
+    | 'merge'
 
 export type EditorMode = 'insert' | 'normalize' | 'trim' | 'merge' | null
 

@@ -2,6 +2,7 @@
 import { useTrackStore } from '@/store/trackStore'
 import NormalizeMenu from '@/components/NormalizeMenu.vue'
 import TrimMenu from '@/components/TrimMenu.vue'
+import MergeMenu from '@/components/MergeMenu.vue'
 import editIcon from '@/assets/icons/edit.svg'
 import trimIcon from '@/assets/icons/trim.svg'
 import normalizeIcon from '@/assets/icons/normalize.svg'
@@ -55,6 +56,23 @@ function toggleNormalize() {
 
             <TrimMenu
                 v-if="store.editorMode === 'trim'"
+                class="mode-menu"
+            />
+        </div>
+
+        <div class="tool-wrapper">
+            <button
+                class="tool-btn"
+                :disabled="!store.track"
+                :class="{ active: store.editorMode === 'merge' }"
+                @click="store.setEditorMode('merge')"
+                title="Merge with another track"
+            >
+                M
+            </button>
+
+            <MergeMenu
+                v-if="store.editorMode === 'merge'"
                 class="mode-menu"
             />
         </div>
