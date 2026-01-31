@@ -2,6 +2,9 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useTrackStore } from '@/store/trackStore'
 import { buildProfile } from '@/utils/buildProfile'
+import distanceIcon from '@/assets/icons/distance.svg'
+import timeIcon from '@/assets/icons/time.svg'
+import elevationIcon from '@/assets/icons/elevation.svg'
 
 const store = useTrackStore()
 
@@ -309,16 +312,18 @@ function onLeave() {
         <div class="content">
             <!-- LEFT INFO -->
             <div class="info">
-                <div><strong>Distance</strong> {{ totalDistanceKm.toFixed(2) }} km</div>
-                <div v-if="startTime">
-                    <strong>Start</strong> {{ startTime.toLocaleTimeString() }}
+                <div>
+                    <img :src="distanceIcon" class="icon" />
+                    {{ totalDistanceKm.toFixed(2) }} km
                 </div>
-                <div v-if="endTime">
-                    <strong>Finish</strong> {{ endTime.toLocaleTimeString() }}
+                <div v-if="startTime">
+                    <img :src="timeIcon" class="icon" />
+                    {{ startTime.toLocaleTimeString() }} / {{ endTime.toLocaleTimeString() }}
                 </div>
                 <div>
+                    <img :src="elevationIcon" class="icon" />
                     <strong>↑</strong> {{ elevationStats.gain.toFixed(0) }} m
-                    &nbsp;
+                    &nbsp;/&nbsp;
                     <strong>↓</strong> {{ elevationStats.loss.toFixed(0) }} m
                 </div>
             </div>
@@ -539,6 +544,12 @@ function onLeave() {
     transform: translateY(-50%);
     font-size: 10px;
     color: #e53935;
+}
+
+.icon {
+    width: 16px;
+    height: 16px;
+    opacity: 0.7;
 }
 
 </style>

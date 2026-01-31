@@ -109,8 +109,8 @@ function toggleNormalize() {
 }
 
 .icon {
-    width: 25px;
-    height: 25px;
+    width: 24px;
+    height: 24px;
     opacity: 0.9;
 }
 
