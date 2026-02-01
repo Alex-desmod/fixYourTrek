@@ -6,6 +6,7 @@ import MergeMenu from '@/components/MergeMenu.vue'
 import editIcon from '@/assets/icons/edit.svg'
 import trimIcon from '@/assets/icons/trim.svg'
 import normalizeIcon from '@/assets/icons/normalize.svg'
+import mergeIcon from '@/assets/icons/merge.svg'
 
 const store = useTrackStore()
 
@@ -24,7 +25,7 @@ function toggleNormalize() {
                 @click="store.setEditorMode('normalize')"
                 title="Detect GPS stucks and normalize the track"
             >
-                <img :src="normalizeIcon" class="icon" />
+                <span class="icon"><img :src="normalizeIcon" /></span>
             </button>
 
             <NormalizeMenu
@@ -40,7 +41,7 @@ function toggleNormalize() {
             @click="store.setEditorMode('insert')"
             title="Insert a point and edit the track"
         >
-            <img :src="editIcon" class="icon" />
+            <span class="icon"><img :src="editIcon" /></span>
         </button>
 
         <div class="tool-wrapper">
@@ -51,7 +52,7 @@ function toggleNormalize() {
                 @click="store.setEditorMode('trim')"
                 title="Trim the track"
             >
-                <img :src="trimIcon" class="icon" />
+                <span class="icon"><img :src="trimIcon" /></span>
             </button>
 
             <TrimMenu
@@ -68,7 +69,7 @@ function toggleNormalize() {
                 @click="store.setEditorMode('merge')"
                 title="Merge with another track"
             >
-                M
+                <span class="icon"><img :src="mergeIcon" /></span>
             </button>
 
             <MergeMenu
@@ -108,10 +109,22 @@ function toggleNormalize() {
     background: #d1d1d1;
 }
 
-.icon {
+.tool-btn .icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.icon img {
     width: 24px;
     height: 24px;
-    opacity: 0.9;
+    display: block;
+    opacity: 0.8;
+}
+
+.tool-btn:disabled .icon {
+    opacity: 0.5;
 }
 
 .tool-wrapper {
@@ -126,6 +139,10 @@ function toggleNormalize() {
 }
 
 @media (max-width: 768px) {
+    #sidebar {
+        top: 30%;
+    }
+
     .tool-btn {
         width: 42px;
         height: 42px;

@@ -49,19 +49,6 @@ function openFile() {
     fileInput.value?.click()
 }
 
-function onKeyDown(e: KeyboardEvent) {
-    // Windows / Linux
-    if (e.ctrlKey && e.key.toLowerCase() === 'o') {
-        e.preventDefault()
-        openFile()
-    }
-
-    // macOS (Cmd+O)
-    if (e.metaKey && e.key.toLowerCase() === 'o') {
-        e.preventDefault()
-        openFile()
-    }
-}
 
 /* choose a file */
 async function onFileSelected(e: Event) {
@@ -145,6 +132,56 @@ async function onExport() {
     }
 }
 
+function isCtrlOrCmd(e: KeyboardEvent) {
+    return e.ctrlKey || e.metaKey
+}
+
+function onKeyDown(e: KeyboardEvent) {
+    const target = e.target as HTMLElement
+    if (['INPUT', 'TEXTAREA'].includes(target.tagName)) return
+
+    const key = e.key.toLowerCase()
+
+    // Open
+    if (isCtrlOrCmd(e) && key === 'o') {
+        e.preventDefault()
+        openFile()
+        return
+    }
+
+    // Export
+    if (isCtrlOrCmd(e) && key === 's') {
+        if (!store.track) return
+        e.preventDefault()
+        onExport()
+        return
+    }
+
+    // Undo
+    if (isCtrlOrCmd(e) && key === 'z') {
+        if (!store.track) return
+        e.preventDefault()
+        onUndo()
+        return
+    }
+
+    // Redo (Ctrl+Shift+Z / Cmd+Shift+Z)
+    if (isCtrlOrCmd(e) && e.shiftKey && key === 'z') {
+        if (!store.track) return
+        e.preventDefault()
+        onRedo()
+        return
+    }
+
+    // Reset
+    if (isCtrlOrCmd(e) && key === 'Backspace') {
+        if (!store.track) return
+        e.preventDefault()
+        onReset()
+        return
+    }
+}
+
 </script>
 
 <template>
@@ -162,13 +199,17 @@ async function onExport() {
                     </span>
                     <span class="shortcut">Ctrl+O</span>
                 </button>
+
                 <button
                     class="submenu-btn"
                     :disabled="!store.track"
                     @click="onExport"
                 >
-                    <img :src="exportIcon" class="icon" />
-                    Export…
+                    <span class="left">
+                        <span class="icon"><img :src="exportIcon" /></span>
+                        <span class="label">Export…</span>
+                    </span>
+                    <span class="shortcut">Ctrl+S</span>
                 </button>
             </div>
         </div>
@@ -176,17 +217,40 @@ async function onExport() {
         <div class="menu-item">
             <button class="top-menu-btn" @click.stop="toggle('edit')">Edit</button>
             <div class="submenu" v-show="openMenu === 'edit'">
-                <button class="submenu-btn" @click="onUndo">
-                    <img :src="undoIcon" class="icon" />
-                    Undo
+                <button
+                    class="submenu-btn"
+                    :disabled="!store.track"
+                    @click="onUndo"
+                >
+                    <span class="left">
+                        <span class="icon"><img :src="undoIcon" /></span>
+                        <span class="label">Undo</span>
+                    </span>
+                    <span class="shortcut">Ctrl+Z</span>
                 </button>
-                <button class="submenu-btn" @click="onRedo">
-                    <img :src="redoIcon" class="icon" />
-                    Redo
+
+                <button
+                    class="submenu-btn"
+                    :disabled="!store.track"
+                    @click="onRedo"
+                >
+                    <span class="left">
+                        <span class="icon"><img :src="redoIcon" /></span>
+                        <span class="label">Redo</span>
+                    </span>
+                    <span class="shortcut">Ctrl+Shift+Z</span>
                 </button>
-                <button class="submenu-btn" @click="onReset">
-                    <img :src="resetIcon" class="icon" />
-                    Reset
+
+                <button
+                    class="submenu-btn"
+                    :disabled="!store.track"
+                    @click="onReset"
+                >
+                    <span class="left">
+                        <span class="icon"><img :src="resetIcon" /></span>
+                        <span class="label">Reset</span>
+                    </span>
+                    <span class="shortcut">Ctrl+⌫</span>
                 </button>
             </div>
         </div>
@@ -271,7 +335,7 @@ async function onExport() {
 .submenu-btn .left {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
 }
 
 .submenu .icon {
@@ -279,13 +343,17 @@ async function onExport() {
     align-items: center;
     justify-content: center;
     line-height: 1;
-    opacity: 0.7;
 }
 
 .icon img {
     width: 18px;
     height: 18px;
     display: block;
+    opacity: 0.8;
+}
+
+.submenu-btn:disabled .icon img {
+    opacity: 0.5;
 }
 
 .submenu .shortcut {

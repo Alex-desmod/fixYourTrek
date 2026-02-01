@@ -312,19 +312,19 @@ function onLeave() {
         <div class="content">
             <!-- LEFT INFO -->
             <div class="info">
-                <div>
-                    <img :src="distanceIcon" class="icon" />
-                    {{ totalDistanceKm.toFixed(2) }} km
+                <div class="stats">
+                    <span class="icon"><img :src="distanceIcon" /></span>
+                    <span class="data">{{ totalDistanceKm.toFixed(2) }} km</span>
                 </div>
-                <div v-if="startTime">
-                    <img :src="timeIcon" class="icon" />
-                    {{ startTime.toLocaleTimeString() }} / {{ endTime.toLocaleTimeString() }}
+                <div v-if="startTime" class="stats">
+                    <span class="icon"><img :src="timeIcon" /></span>
+                    <span class="data">{{ startTime.toLocaleTimeString() }} / {{ endTime.toLocaleTimeString() }}</span>
                 </div>
-                <div>
-                    <img :src="elevationIcon" class="icon" />
-                    <strong>↑</strong> {{ elevationStats.gain.toFixed(0) }} m
-                    &nbsp;/&nbsp;
-                    <strong>↓</strong> {{ elevationStats.loss.toFixed(0) }} m
+                <div class="stats">
+                    <span class="icon"><img :src="elevationIcon" /></span>
+                    <span class="data">
+                        <strong>↑</strong> {{ elevationStats.gain.toFixed(0) }} m / <strong>↓</strong> {{ elevationStats.loss.toFixed(0) }} m
+                    </span>
                 </div>
             </div>
 
@@ -465,6 +465,9 @@ function onLeave() {
 .content {
     flex: 1;
     display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: 100%;
     overflow: hidden;
 }
 
@@ -473,22 +476,49 @@ function onLeave() {
 }
 
 .info {
-    width: 180px;
+    width: 160px;
     padding: 8px;
     font-size: 12px;
     border-right: 1px solid #ddd;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 8px;
+}
+
+.stats {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+}
+
+.stats .icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.stats .data {
+    white-space: nowrap;
+}
+
+.icon img {
+    width: 16px;
+    height: 16px;
+    opacity: 0.8;
 }
 
 .chart {
     position: relative;
-    flex: 1;
+    flex: 1 1 auto;
+    min-width: 0;
 }
 
 .chart svg {
     display: block;
+    width: 100%;
+    height: 100%;
 }
 
 .grid line {
@@ -546,10 +576,28 @@ function onLeave() {
     color: #e53935;
 }
 
-.icon {
-    width: 16px;
-    height: 16px;
-    opacity: 0.7;
-}
+@media (max-width: 768px) {
+    .info {
+        width: 100px;
+        font-size: 10px;
+        padding: 6px;
+    }
 
+    .stats {
+        gap: 8px;
+    }
+
+    .icon img {
+        width: 14px;
+        height: 14px;
+    }
+
+    .elevation-axis {
+        width: 30px;
+    }
+
+    .speed-axis {
+        width: 30px;
+    }
+}
 </style>
