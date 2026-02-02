@@ -131,7 +131,7 @@ class TrackSession:
         if dist is not None and dur is not None:
             speed = dist / dur
         else:
-            speed = 5.0
+            speed = 4.0
 
         # ========== CASE 1 — prepend ==========
         if prev_point_idx == -1:

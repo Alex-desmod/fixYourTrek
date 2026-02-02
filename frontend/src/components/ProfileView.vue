@@ -260,8 +260,23 @@ function buildAreaPolygon(pts: ProfilePoint[]) {
 
 
 /* ---------- hover interaction ---------- */
+const hoverDistKm = ref<number | null>(null)
 
 const hoverX = ref<number | null>(null)
+
+const hoverLabelStyle = computed(() => {
+    if (hoverX.value === null) return {}
+
+    const labelWidth = 50 // px
+    const x = Math.min(
+        LEFT_PAD + drawWidth.value - labelWidth / 2,
+        Math.max(LEFT_PAD + labelWidth / 2, hoverX.value)
+    )
+
+    return {
+        left: `${x}px`
+    }
+})
 
 function onMove(e: MouseEvent) {
     if (!chartEl.value || !profile.value.length) return
@@ -294,11 +309,13 @@ function onMove(e: MouseEvent) {
     }
 
     store.setHoverPoint(best.point)
+    hoverDistKm.value = targetDist
 }
 
 function onLeave() {
     hoverX.value = null
     store.setHoverPoint(null)
+    hoverDistKm.value = null
 }
 </script>
 
@@ -335,6 +352,15 @@ function onLeave() {
                 @mousemove="onMove"
                 @mouseleave="onLeave"
             >
+                <!-- hover distance label -->
+                <div
+                    v-if="hoverDistKm !== null"
+                    class="hover-label"
+                    :style="hoverLabelStyle"
+                >
+                    {{ hoverDistKm.toFixed(2) }} km
+                </div>
+
                 <svg :width="width" :height="height">
                     <!-- grid Y -->
                     <g class="grid">
@@ -519,6 +545,19 @@ function onLeave() {
     display: block;
     width: 100%;
     height: 100%;
+}
+
+.hover-label {
+    position: absolute;
+    top: 6px;
+    transform: translateX(-50%);
+    padding: 2px 6px;
+    font-size: 11px;
+    background: rgba(0, 0, 0, 0.65);
+    color: white;
+    border-radius: 4px;
+    pointer-events: none;
+    white-space: nowrap;
 }
 
 .grid line {
