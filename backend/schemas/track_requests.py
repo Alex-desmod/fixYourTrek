@@ -41,6 +41,12 @@ class RerouteRequest(BaseModel):
     mode: str = "straight"
     radius_m: float
 
+class RecalcTimesRequest(BaseModel):
+    session_id: str
+    start_point_id: str
+    end_point_id: str
+    max_deviation: float
+
 class TrimRequest(BaseModel):
     session_id: str
     start_point_id: str

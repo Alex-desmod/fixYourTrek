@@ -251,6 +251,94 @@ class TrackSession:
         center.lat = new_lat
         center.lon = new_lon
 
+    def recalculate_times(
+            self,
+            start_point_id: str,
+            end_point_id: str,
+            max_deviation: float = 0.10,  # 10%
+    ):
+        """
+        Smoothes time distribution between two points so that
+        local speed does not deviate too much from the average.
+        """
+
+        self._save_state()
+
+        # ---------- 1. Flatten points ----------
+        flat = []
+        for seg_idx, seg in enumerate(self.current_track.segments):
+            for pt_idx, p in enumerate(seg.points):
+                flat.append((seg_idx, pt_idx, p))
+
+        # ---------- 2. Locate indices ----------
+        def find_idx(pid):
+            for i, (_, _, p) in enumerate(flat):
+                if p.id == pid:
+                    return i
+            raise ValueError(f"Point id not found: {pid}")
+
+        start_idx = find_idx(start_point_id)
+        end_idx = find_idx(end_point_id)
+
+        if start_idx >= end_idx:
+            raise ValueError("start_point must be before end_point")
+
+        points = [p for _, _, p in flat[start_idx:end_idx+1]]
+
+        # ---------- 3. Distances ----------
+        dists = [0.0]
+        for i in range(1, len(points)):
+            d = haversine(
+                (points[i - 1].lat, points[i - 1].lon),
+                (points[i].lat, points[i].lon),
+                unit=Unit.METERS
+            )
+            dists.append(d)
+
+        total_dist = sum(dists)
+        if total_dist == 0:
+            return  # nothing to normalize
+
+        # ---------- 4. Timing ----------
+        t0 = points[0].time
+        t1 = points[-1].time
+        total_time = (t1 - t0).total_seconds()
+
+        avg_speed = total_dist / total_time
+
+        # cumulative distance
+        cum_dist = 0.0
+        new_times = [t0]
+
+        for i in range(1, len(points) - 1):
+            cum_dist += dists[i]
+            frac = cum_dist / total_dist
+            new_t = t0 + timedelta(seconds=total_time * frac)
+            new_times.append(new_t)
+
+        new_times.append(t1)
+
+        # ---------- 5. Clamp speed ----------
+        for i in range(1, len(points)):
+            dt = (new_times[i] - new_times[i - 1]).total_seconds()
+            if dt <= 0:
+                dt = 1e-3
+
+            speed = dists[i] / dt
+            max_s = avg_speed * (1 + max_deviation)
+            min_s = avg_speed * (1 - max_deviation)
+
+            if speed > max_s:
+                dt = dists[i] / max_s
+            elif speed < min_s:
+                dt = dists[i] / min_s
+
+            new_times[i] = new_times[i - 1] + timedelta(seconds=dt)
+
+        # ---------- 6. Apply ----------
+        for p, t in zip(points, new_times):
+            p.time = t
+
     def trim(self, start_point_id: str, end_point_id: str):
         """
         Trim track between two point IDs (inclusive).

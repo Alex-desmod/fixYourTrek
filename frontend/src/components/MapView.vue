@@ -250,6 +250,25 @@ watch(
     { immediate: true }
 )
 
+watch(
+    () => [store.editorMode, store.recalc.startId, store.recalc.endId],
+    ([mode, startId, endId]) => {
+        if (!map.value) return
+
+        clearTrimPreview(map.value)
+
+        if (mode !== 'recalc') return
+        if (!startId || !endId) return
+
+        renderTrimPreview(
+            map.value,
+            store.track,
+            startId,
+            endId
+        )
+    },
+    { immediate: true }
+)
 
 watch(
     () => store.hoverPoint,

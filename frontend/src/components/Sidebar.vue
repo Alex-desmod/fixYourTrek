@@ -3,10 +3,12 @@ import { useTrackStore } from '@/store/trackStore'
 import NormalizeMenu from '@/components/NormalizeMenu.vue'
 import TrimMenu from '@/components/TrimMenu.vue'
 import MergeMenu from '@/components/MergeMenu.vue'
+import RecalcMenu from '@/components/RecalcMenu.vue'
 import editIcon from '@/assets/icons/edit.svg'
 import trimIcon from '@/assets/icons/trim.svg'
 import normalizeIcon from '@/assets/icons/normalize.svg'
 import mergeIcon from '@/assets/icons/merge.svg'
+import recalcIcon from '@/assets/icons/recalculate.svg'
 
 const store = useTrackStore()
 
@@ -48,6 +50,23 @@ function toggleNormalize() {
             <button
                 class="tool-btn"
                 :disabled="!store.track"
+                :class="{ active: store.editorMode === 'recalc' }"
+                @click="store.setEditorMode('recalc')"
+                title="Recalculate times on the marked section"
+            >
+                <span class="icon"><img :src="recalcIcon" /></span>
+            </button>
+
+            <RecalcMenu
+                v-if="store.editorMode === 'recalc'"
+                class="mode-menu"
+            />
+        </div>
+
+        <div class="tool-wrapper">
+            <button
+                class="tool-btn"
+                :disabled="!store.track"
                 :class="{ active: store.editorMode === 'trim' }"
                 @click="store.setEditorMode('trim')"
                 title="Trim the track"
@@ -84,7 +103,7 @@ function toggleNormalize() {
 <style scoped>
 #sidebar {
     position: fixed;
-    top: 40%;
+    top: 35%;
     left: 10px;
     display: flex;
     flex-direction: column;

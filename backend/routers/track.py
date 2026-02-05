@@ -8,7 +8,7 @@ from urllib.parse import quote
 from backend.models.track import GpsStuck
 from backend.schemas.track_requests import (SessionRequest, RerouteRequest, TrimRequest,
                                             InsertPointRequest, UpdateTimeRequest, PreviewNormalizeRequest,
-                                            ApplyNormalizeRequest)
+                                            ApplyNormalizeRequest, RecalcTimesRequest)
 from backend.services.track_loader import load_track, export_track
 from backend.services.track_session import TrackSessionManager
 
@@ -114,6 +114,18 @@ async def reroute_track(req: RerouteRequest):
         new_lon=req.new_lon,
         mode=req.mode,
         radius_m=req.radius_m
+    )
+    return {"track": session.current_track.to_dict()}
+
+@router.post("/recalculate_times")
+async def recalc_times(req: RecalcTimesRequest):
+    session = session_manager.get(req.session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    session.recalculate_times(
+        start_point_id=req.start_point_id,
+        end_point_id=req.end_point_id,
+        max_deviation=req.max_deviation
     )
     return {"track": session.current_track.to_dict()}
 

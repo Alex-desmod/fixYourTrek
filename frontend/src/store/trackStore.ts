@@ -10,8 +10,9 @@ export type TrackUpdateReason =
     | 'reset'
     | 'normalize'
     | 'merge'
+    | 'recalc'
 
-export type EditorMode = 'insert' | 'normalize' | 'trim' | 'merge' | null
+export type EditorMode = 'insert' | 'normalize' | 'trim' | 'merge' | 'recalc' | null
 
 export const useTrackStore = defineStore('track', {
     state: () => ({
@@ -31,6 +32,12 @@ export const useTrackStore = defineStore('track', {
 
         /* ---------- TRIM ---------- */
         trim: {
+            startId: null as string | null,
+            endId: null as string | null
+        },
+
+        /* ---------- RECALC ---------- */
+        recalc: {
             startId: null as string | null,
             endId: null as string | null
         },
@@ -89,6 +96,12 @@ export const useTrackStore = defineStore('track', {
                 const pts = this.track.segments.flatMap(s => s.points)
                 this.trim.startId = pts[0]?.id ?? null
                 this.trim.endId = pts.at(-1)?.id ?? null
+            }
+
+            if (mode === 'recalc') {
+                const pts = this.track.segments.flatMap(s => s.points)
+                this.recalc.startId = pts[0]?.id ?? null
+                this.recalc.endId = pts.at(-1)?.id ?? null
             }
         },
 

@@ -241,6 +241,17 @@ const trimAfterArea = computed(() => {
     return buildAreaPolygon(pts)
 })
 
+const recalcRange = computed(() => {
+    if (!store.recalc.startId || !store.recalc.endId) return null
+
+    const startIdx = profile.value.findIndex(p => p.point.id === store.recalc.startId)
+    const endIdx = profile.value.findIndex(p => p.point.id === store.recalc.endId)
+
+    if (startIdx === -1 || endIdx === -1 || startIdx >= endIdx) return null
+
+    return profile.value.slice(startIdx, endIdx + 1)
+})
+
 function buildAreaPolygon(pts: ProfilePoint[]) {
     if (!pts.length) return ''
 
@@ -390,6 +401,14 @@ function onLeave() {
                         :points="trimAfterArea"
                         fill="red"
                         opacity="0.9"
+                    />
+
+                    <!-- recalculate times preview -->
+                    <polygon
+                        v-if="recalcRange"
+                        :points="buildAreaPolygon(recalcRange)"
+                        fill="red"
+                        opacity="0.4"
                     />
 
                     <polyline
