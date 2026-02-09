@@ -157,14 +157,6 @@ function onKeyDown(e: KeyboardEvent) {
         return
     }
 
-    // Undo
-    if (isCtrlOrCmd(e) && key === 'z') {
-        if (!store.track) return
-        e.preventDefault()
-        onUndo()
-        return
-    }
-
     // Redo (Ctrl+Shift+Z / Cmd+Shift+Z)
     if (isCtrlOrCmd(e) && e.shiftKey && key === 'z') {
         if (!store.track) return
@@ -173,8 +165,16 @@ function onKeyDown(e: KeyboardEvent) {
         return
     }
 
+    // Undo
+    if (isCtrlOrCmd(e) && key === 'z') {
+        if (!store.track) return
+        e.preventDefault()
+        onUndo()
+        return
+    }
+
     // Reset
-    if (isCtrlOrCmd(e) && key === 'Backspace') {
+    if (isCtrlOrCmd(e) && key === 'backspace') {
         if (!store.track) return
         e.preventDefault()
         onReset()
