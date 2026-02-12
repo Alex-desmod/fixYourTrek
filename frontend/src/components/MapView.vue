@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref, watch, computed } from 'vue'
 import L from 'leaflet'
+import type { Map as LeafletMap } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useTrackStore } from '@/store/trackStore'
 import { renderTrack } from '@/utils/renderTrack'
@@ -12,7 +13,7 @@ import { renderTrimPreview, clearTrimPreview } from '@/utils/trimPreview'
 import PointContextMenu from '@/components/PointContextMenu.vue'
 
 const mapEl = ref<HTMLDivElement | null>(null)
-const map = ref<L.Map | null>(null)
+const map = ref<LeafletMap | null>(null)
 const store = useTrackStore()
 
 const spacePressed = ref(false)

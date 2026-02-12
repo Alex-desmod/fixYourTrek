@@ -80,7 +80,7 @@ export async function updateTime(payload: {
     session_id: string
     segment_idx: number
     point_idx: number
-    new_time
+    new_time: string
 }) {
     const res = await fetch('/api/track/update_time', {
         method: 'POST',
