@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, ref, watch, computed } from 'vue'
+import { onMounted, onBeforeUnmount, ref, shallowRef, watch, computed, markRaw } from 'vue'
 import L from 'leaflet'
 import type { Map as LeafletMap } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -13,7 +13,7 @@ import { renderTrimPreview, clearTrimPreview } from '@/utils/trimPreview'
 import PointContextMenu from '@/components/PointContextMenu.vue'
 
 const mapEl = ref<HTMLDivElement | null>(null)
-const map = ref<LeafletMap | null>(null)
+const map = shallowRef<LeafletMap | null>(null)
 const store = useTrackStore()
 
 const spacePressed = ref(false)
@@ -43,16 +43,18 @@ function onGlobalClick(e: MouseEvent) {
 onMounted(() => {
     if (!mapEl.value) return
 
-    map.value = L.map(mapEl.value, {
+    const leafletMap = L.map(mapEl.value, {
         zoomControl: false,
         zoomAnimation: false,
         markerZoomAnimation: false,
         fadeAnimation: false
     }).setView([20, 0], 3)
 
+    map.value = markRaw(leafletMap)
+
     L.control.zoom({
         position: 'topright'
-    }).addTo(map.value)
+    }).addTo(leafletMap)
 
     L.control.scale({
         position: 'bottomright',
@@ -62,7 +64,7 @@ onMounted(() => {
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
-    }).addTo(map.value)
+    }).addTo(leafletMap)
 
     document.addEventListener('mousedown', onGlobalClick)
     document.addEventListener('keydown', onKeyDown)
