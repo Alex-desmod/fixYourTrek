@@ -1,16 +1,31 @@
 import L from 'leaflet'
 
+export interface TrackPoint {
+    id: string
+    lat: number
+    lon: number
+    ele?: number
+    time?: string
+}
+
+export interface TrackSegment {
+    points: TrackPoint[]
+}
+
+export interface Track {
+    segments: TrackSegment[]
+}
+
 export interface ProfilePoint {
     lat: number
     lon: number
     ele: number | null
     distKm: number
     speed: number | null
-    point: any
-    trimmedOut: boolean
+    point: TrackPoint
 }
 
-export function buildProfile(track: any): ProfilePoint[] {
+export function buildProfile(track: Track): ProfilePoint[] {
     const pts: ProfilePoint[] = []
     let distKm = 0
 

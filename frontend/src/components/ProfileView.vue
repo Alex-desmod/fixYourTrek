@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useTrackStore } from '@/store/trackStore'
 import { buildProfile } from '@/utils/buildProfile'
+import type { ProfilePoint } from '@/utils/buildProfile'
 import distanceIcon from '@/assets/icons/distance.svg'
 import timeIcon from '@/assets/icons/time.svg'
 import elevationIcon from '@/assets/icons/elevation.svg'
@@ -197,19 +198,26 @@ function speedY(speed: number) {
 const areaPoints = computed(() => {
     if (!profile.value.length || width.value === 0) return ''
 
-    const top = profile.value.map(p => {
+    const validPts = profile.value.filter((p): p is typeof p & { ele: number } => p.ele !== null)
+    if (!validPts.length) return ''
+
+    const top = validPts.map(p => {
         const x = xScale(p.distKm)
         const y = yScale(p.ele)
         return `${x},${y}`
     })
 
+    const lastPoint = validPts[validPts.length - 1]!
+    const firstPoint = validPts[0]!
+
     const bottom = [
-        `${LEFT_PAD + drawWidth.value},${height - paddingBottom}`,
-        `${LEFT_PAD},${height - paddingBottom}`
+        `${xScale(lastPoint.distKm)},${height - paddingBottom}`,
+        `${xScale(firstPoint.distKm)},${height - paddingBottom}`
     ]
 
     return [...top, ...bottom].join(' ')
 })
+
 
 const speedLine = computed(() => {
     if (!profile.value.length || width.value === 0) return ''
@@ -269,17 +277,22 @@ const recalcRange = computed(() => {
 })
 
 function buildAreaPolygon(pts: ProfilePoint[]) {
-    if (!pts.length) return ''
+    const validPts = pts.filter((p): p is typeof p & { ele: number } => p.ele !== null)
 
-    const top = pts.map(p => {
+    if (!validPts.length) return ''
+
+    const top = validPts.map(p => {
         const x = LEFT_PAD + (p.distKm / totalDistanceKm.value) * drawWidth.value
         const y = yScale(p.ele)
         return `${x},${y}`
     })
 
+    const firstPoint = validPts[0]!
+    const lastPoint = validPts[validPts.length - 1]!
+
     const bottom = [
-        `${LEFT_PAD + (pts.at(-1)!.distKm / totalDistanceKm.value) * drawWidth.value},${height - paddingBottom}`,
-        `${LEFT_PAD + (pts[0].distKm / totalDistanceKm.value) * drawWidth.value},${height - paddingBottom}`
+        `${LEFT_PAD + (lastPoint.distKm / totalDistanceKm.value) * drawWidth.value},${height - paddingBottom}`,
+        `${LEFT_PAD + (firstPoint.distKm / totalDistanceKm.value) * drawWidth.value},${height - paddingBottom}`
     ]
 
     return [...top, ...bottom].join(' ')
