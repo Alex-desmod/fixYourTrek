@@ -17,6 +17,7 @@ async function onFileSelected(e: Event) {
 
     const file = files[0]
     if (!store.sessionId) return
+    if (!file) return
 
     loading.value = true
     try {

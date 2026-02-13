@@ -23,7 +23,7 @@ export function findPointLocation(track: any, point: any) {
     return null
 }
 
-export function findPointById(track: any, id: number) {
+export function findPointById(track: any, id: string) {
     for (const segment of track.segments) {
         for (const p of segment.points) {
             if (p.id === id) return p

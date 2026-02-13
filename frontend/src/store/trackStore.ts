@@ -11,6 +11,7 @@ export type TrackUpdateReason =
     | 'normalize'
     | 'merge'
     | 'recalc'
+    | 'update_time'
 
 export type EditorMode = 'insert' | 'normalize' | 'trim' | 'merge' | 'recalc' | null
 

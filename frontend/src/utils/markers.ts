@@ -105,7 +105,7 @@ export function renderPointMarker(
     return marker
 }
 
-export function deletePointMarker(map: L.Map, pointId: number) {
+export function deletePointMarker(map: L.Map, pointId: string) {
     const marker = pointMarkers.get(pointId)
     if (!marker) return
 
@@ -114,12 +114,11 @@ export function deletePointMarker(map: L.Map, pointId: number) {
     pointUI.delete(pointId)
 }
 
-export function getPointUI(point: Point) {
-    const id = point.id
-    if (!pointUI.has(id)) {
-        pointUI.set(id, { influenceRadius: 50 })
+export function getPointUI(pointId: string) {
+    if (!pointUI.has(pointId)) {
+        pointUI.set(pointId, { influenceRadius: 50 })
     }
-    return pointUI.get(id)!
+    return pointUI.get(pointId)!
 }
 
 export function clearPointMarkers(map: L.Map) {

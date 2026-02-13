@@ -18,14 +18,14 @@ const store = useTrackStore()
 
 const spacePressed = ref(false)
 
-const contextPointId = ref<number | null>(null)
+const contextPointId = ref<string | null>(null)
 
 const contextPoint = computed(() => {
     if (!store.track || contextPointId.value == null) return null
     return findPointById(store.track, contextPointId.value)
 })
 
-const contextPos = ref<{ x: number; y: number }>({ x: 0, y: 0 })
+const contextPos = ref<{ x: number; y: number } | null>(null)
 
 const contextRadius = ref(50)
 
@@ -112,7 +112,7 @@ function onKeyUp(e: KeyboardEvent) {
     if (e.code === 'Space') {
         spacePressed.value = false
 
-        if (store.insertMode && map.value) {
+        if (store.editorMode === 'insert' && map.value) {
             enableInsertPointMode(map.value, openContextMenu)
         }
     }

@@ -91,8 +91,8 @@ async function applyTime() {
     if (!isTimeValid.value || !isChanged.value) return
 
     const base = new Date(props.point.time)
-    const [h, m, s] = newTime.value.split(':').map(Number)
-    base.setHours(h, m, s ?? 0, 0)
+    const [h = 0, m = 0, s = 0] = newTime.value.split(':').map(Number)
+    base.setHours(h, m, s, 0)
 
     const res = await updateTime({
         session_id: store.sessionId!,

@@ -10,7 +10,6 @@ const store = useTrackStore()
 
 /* ---------- layout ---------- */
 
-const container = ref<HTMLDivElement | null>(null)
 const chartEl = ref<HTMLDivElement | null>(null)
 
 const width = ref(0)
@@ -30,7 +29,7 @@ onMounted(() => {
     if (!chartEl.value) return
 
     ro = new ResizeObserver(entries => {
-        width.value = entries[0].contentRect.width
+        width.value = entries[0]?.contentRect.width ?? 0
     })
     ro.observe(chartEl.value)
 })
@@ -50,13 +49,22 @@ const totalDistanceKm = computed(() =>
     profile.value.length ? profile.value.at(-1)!.distKm : 0
 )
 
-const minEle = computed(() =>
-    Math.min(...profile.value.map(p => p.ele))
-)
+const minEle = computed(() => {
+    const elevations = profile.value
+        .map(p => p.ele)
+        .filter((e): e is number => e !== null)
 
-const maxEle = computed(() =>
-    Math.max(...profile.value.map(p => p.ele))
-)
+    return elevations.length ? Math.min(...elevations) : 0
+})
+
+const maxEle = computed(() => {
+    const elevations = profile.value
+        .map(p => p.ele)
+        .filter((e): e is number => e !== null)
+
+    return elevations.length ? Math.max(...elevations) : 100
+})
+
 
 const minSpeed = computed(() =>
     Math.min(...profile.value.map(p => p.speed ?? 0))
@@ -73,9 +81,17 @@ const elevationStats = computed(() => {
     let loss = 0
 
     for (let i = 1; i < profile.value.length; i++) {
-        const d = profile.value[i].ele - profile.value[i - 1].ele
-        if (d > 0) gain += d
-        else loss -= d
+        const current = profile.value[i]
+        const previous = profile.value[i - 1]
+
+        if (current && previous && current.ele !== null && previous.ele !== null) {
+            const d = current.ele - previous.ele
+            if (d > 0) {
+                gain += d
+            } else {
+                loss -= d
+            }
+        }
     }
 
     return { gain, loss }
