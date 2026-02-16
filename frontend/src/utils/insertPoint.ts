@@ -27,7 +27,7 @@ export function enableInsertPointMode(
         const action = resolveInsertAction(track, lat, lng)
 
         // Select an existing point
-        if (action.type === 'select-existing') {
+        if (action.type === 'select-existing' && 'point' in action) {
             store.selectPoint(action.point)
             renderPointMarker(map, action.point, onPointContextMenu)
             return
@@ -49,6 +49,10 @@ export function enableInsertPointMode(
 
 
         // Add a new point
+        if (action.type !== 'insert-new' || action.prevPointIdx === undefined) {
+            return
+        }
+
         try {
             const payload = {
                 session_id: sessionId,

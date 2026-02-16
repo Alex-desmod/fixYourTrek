@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useTrackStore } from '@/store/trackStore'
-import { flattenTrack, clearTrimPreview, renderTrimPreview } from '@/utils/trimPreview'
+import { flattenTrack } from '@/utils/trimPreview'
 import { trimTrack } from '@/api/trackApi'
 
 const store = useTrackStore()
@@ -40,7 +40,7 @@ const selectionStyle = computed(() => {
 
 
 async function applyTrim() {
-    if (!store.sessionId) return
+    if (!store.sessionId || !startPointId.value || !endPointId.value) return
 
     const res = await trimTrack({
         session_id: store.sessionId,

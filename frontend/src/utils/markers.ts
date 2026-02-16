@@ -134,7 +134,7 @@ export function syncPointMarkers(
     track: any
 ) {
     // all point ids of the track
-    const aliveIds = new Set<number>()
+    const aliveIds = new Set<string>()
 
     for (const segment of track.segments) {
         for (const p of segment.points) {

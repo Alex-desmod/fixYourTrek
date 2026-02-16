@@ -94,13 +94,13 @@ export const useTrackStore = defineStore('track', {
             this.editorMode = mode
 
             if (mode === 'trim') {
-                const pts = this.track.segments.flatMap(s => s.points)
+                const pts = this.track.segments.flatMap((s: any) => s.points)
                 this.trim.startId = pts[0]?.id ?? null
                 this.trim.endId = pts.at(-1)?.id ?? null
             }
 
             if (mode === 'recalc') {
-                const pts = this.track.segments.flatMap(s => s.points)
+                const pts = this.track.segments.flatMap((s: any) => s.points)
                 this.recalc.startId = pts[0]?.id ?? null
                 this.recalc.endId = pts.at(-1)?.id ?? null
             }
