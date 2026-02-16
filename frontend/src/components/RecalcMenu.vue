@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useTrackStore } from '@/store/trackStore'
-import { flattenTrack, clearTrimPreview, renderTrimPreview } from '@/utils/trimPreview'
+import { flattenTrack } from '@/utils/trimPreview'
 import { recalcTimes } from '@/api/trackApi'
 
 const store = useTrackStore()
@@ -42,7 +42,7 @@ const maxDeviation = ref(0.1)
 
 
 async function applyRecalcTimes() {
-    if (!store.sessionId) return
+    if (!store.sessionId || !startPointId.value || !endPointId.value) return
 
     const res = await recalcTimes({
         session_id: store.sessionId,

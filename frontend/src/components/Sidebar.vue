@@ -12,9 +12,6 @@ import recalcIcon from '@/assets/icons/recalculate.svg'
 
 const store = useTrackStore()
 
-function toggleNormalize() {
-    store.normalizeOpen = !store.normalizeOpen
-}
 </script>
 
 <template>

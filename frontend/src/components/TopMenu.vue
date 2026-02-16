@@ -53,16 +53,18 @@ function openFile() {
 /* choose a file */
 async function onFileSelected(e: Event) {
     const input = e.target as HTMLInputElement
-    if (!input.files || input.files.length === 0) return
+    const file = input.files?.[0]
+
+    if (!file) return
 
     try {
-        const result = await uploadTrack(input.files[0])
+        const result = await uploadTrack(file)
         store.setSession(result.session_id, result.track, 'upload')
     } catch (err) {
         console.error('Upload failed', err)
         alert('Failed to upload track')
     } finally {
-        input.value = '' // to upload the same file once again
+        input.value = ''
         close()
     }
 }

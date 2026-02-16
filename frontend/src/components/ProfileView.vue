@@ -348,7 +348,11 @@ function onMove(e: MouseEvent) {
         }
     }
 
-    store.setHoverPoint(best.point)
+    if (best) {
+        store.setHoverPoint(best.point)
+    } else {
+        store.setHoverPoint(null)
+    }
     hoverDistKm.value = targetDist
 }
 
@@ -373,7 +377,7 @@ function onLeave() {
                     <span class="icon"><img :src="distanceIcon" /></span>
                     <span class="data">{{ totalDistanceKm.toFixed(2) }} km</span>
                 </div>
-                <div v-if="startTime" class="stats">
+                <div v-if="startTime && endTime" class="stats">
                     <span class="icon"><img :src="timeIcon" /></span>
                     <span class="data">{{ startTime.toLocaleTimeString() }} / {{ endTime.toLocaleTimeString() }}</span>
                 </div>
