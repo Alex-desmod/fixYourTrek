@@ -13,8 +13,8 @@ export interface FlatPoint {
 export function flattenTrack(track: any): FlatPoint[] {
     const res: FlatPoint[] = []
 
-    track.segments.forEach((seg, sIdx) => {
-        seg.points.forEach((p, pIdx) => {
+    track.segments.forEach((seg: any, sIdx: number) => {
+        seg.points.forEach((p: any, pIdx: number) => {
             if (p.lat != null && p.lon != null) {
                 res.push({
                     id: p.id,
@@ -58,11 +58,11 @@ export function renderTrimPreview(
     const before = flat.slice(0, startIdx + 1)
     const after  = flat.slice(endIdx)
 
-    drawRange(map, before, '#999')
-    drawRange(map, after, '#999')
+    drawRange(map, before)
+    drawRange(map, after)
 }
 
-function drawRange(map: L.Map, pts: FlatPoint[], color: string) {
+function drawRange(map: L.Map, pts: FlatPoint[]) {
     if (pts.length < 2) return
 
     const latlngs = pts.map(p => [p.lat, p.lon]) as [number, number][]

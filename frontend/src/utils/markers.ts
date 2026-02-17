@@ -20,7 +20,7 @@ const pointUI = new Map<string, { influenceRadius: number }>()
 
 let startMarker: L.Marker | null = null
 let finishMarker: L.Marker | null = null
-let hoverMarker: L.Marker | null = null
+let hoverMarker: L.CircleMarker | null = null
 
 /* ---------- POINTS ---------- */
 
@@ -160,8 +160,8 @@ export function renderStartFinishMarkers(
 ) {
     if (pts.length < 2) return
 
-    const start = pts[0]
-    const finish = pts[pts.length - 1]
+    const start = pts[0]!
+    const finish = pts[pts.length - 1]!
 
     const startLatLng: [number, number] = [start.lat, start.lon]
     const finishLatLng: [number, number] = [finish.lat, finish.lon]

@@ -24,11 +24,11 @@ export function renderNormalizePreview(
 
         const pts = segment.points
         .slice(stuck.start_idx, stuck.end_idx + 1)
-        .filter(p => p.lat != null && p.lon != null)
+        .filter((p: any) => p.lat != null && p.lon != null)
 
         if (pts.length < 2) continue
 
-        const latlngs = pts.map(p => [p.lat, p.lon]) as [number, number][]
+        const latlngs = pts.map((p: any) => [p.lat, p.lon]) as [number, number][]
 
         const poly = L.polyline(latlngs, {
             color: 'red',
