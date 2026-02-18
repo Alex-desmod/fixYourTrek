@@ -15,7 +15,7 @@ app.include_router(track.router)
 BASE_DIR = Path(__file__).resolve().parent.parent
 FRONTEND_DIR = BASE_DIR / "frontend"
 
-app.mount("/assets", StaticFiles(directory="frontend/dist/assets"), name="assets")
+app.mount("/assets", StaticFiles(directory= FRONTEND_DIR / "dist/assets"), name="assets")
 
 @app.get("/", response_class=HTMLResponse)
 def frontend():
