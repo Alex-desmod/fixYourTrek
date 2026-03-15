@@ -49,15 +49,22 @@ export function enableInsertPointMode(
 
 
         // Add a new point
-        if (action.type !== 'insert-new' || action.prevPointIdx === undefined) {
+        if (action.type === 'select-existing') {
+            return
+        }
+
+        const segmentIdx = action.segmentIdx
+        const prevPointIdx = action.prevPointIdx
+
+        if (segmentIdx === undefined || prevPointIdx === undefined) {
             return
         }
 
         try {
             const payload = {
                 session_id: sessionId,
-                segment_idx: action.segmentIdx,
-                prev_point_idx: action.prevPointIdx,
+                segment_idx: segmentIdx,
+                prev_point_idx: prevPointIdx,
                 lat,
                 lon: lng
             }
