@@ -147,7 +147,7 @@ function onDelete() {
     >
         <label class="field">
             <span>Influence radius: {{ radius }} m</span>
-            <input type="range" min="20" max="200" v-model.number="radius" />
+            <input type="range" min="20" max="500" v-model.number="radius" />
         </label>
 
         <label class="field">
